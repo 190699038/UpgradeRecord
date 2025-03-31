@@ -24,13 +24,16 @@ class ReviewRecord extends BaseModel {
     }
 
     public function update($id, $data) {
-        $sql = "UPDATE {$this->table} SET applicant=?, review_status=?, review_time=?, reviewer=? WHERE id=?";
+        $sql = "UPDATE {$this->table} SET country=?, record_id=?, review_content=?, review_time=? ,reviewer = ? , conclusion= ? , screenshot_url = ? WHERE id=?";
         $stmt = $this->db->prepare($sql);
         $obj = $stmt->execute([
-            $data['applicant'],
-            $data['review_status'],
+            $data['country'],
+            $data['record_id'],
+            $data['review_content'],
             $data['review_time'],
             $data['reviewer'],
+            $data['conclusion'],
+            $data['screenshot_url'],
             $id
         ]);
         return $this->returnResult($obj);

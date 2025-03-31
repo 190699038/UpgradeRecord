@@ -9,13 +9,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vueup/vue-quill": "^1.2.0",
     "axios": "^1.8.4",
-    "element-plus": "^2.9.7",
+    "compressorjs": "^1.2.1",
+    "quill": "^2.0.3",
     "vue": "^3.5.13",
-    "vue-router": "^4.5.0"
+    "vue-router": "^4.5.0",
+    "vue3-quill": "^0.3.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitejs/plugin-vue": "^5.2.3",
+    "element-plus": "^2.9.7",
     "unplugin-vue-components": "^28.4.1",
     "vite": "^6.2.0"
   }
