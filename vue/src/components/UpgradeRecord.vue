@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+
     <!-- 查询区域 -->
     <div class="search-area">
       <el-button type="primary" @click="openDialog('create')">新增记录</el-button>
@@ -143,19 +144,48 @@
         <el-button type="primary" @click="submitForm">确认</el-button>
       </template>
     </el-dialog>
+    <!-- 复盘弹窗 -->
+    <el-dialog
+      v-model="reviewDialogVisible"
+      title="升级内容复盘"
+      :width="`${windowWidth * 0.8}px`"
+      :height="`${windowHeight * 0.8}px`"
+      top="5vh"
+    >
+      <div class="editor-container">
+        <div class="content-container">{{ currentRow.content }}</div>
 
+        <QuillEditor
+          v-model:content="editorContent"
+          :options="editorOptions"
+          contentType="html"
+          ref="myQuillEditor"
+        />
+      </div>
+      <template #footer>
+        <el-button @click="reviewDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
 
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed }  from 'vue';
-import api from '@/utils/api.js'
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
+import api from '@/utils/api.js';
+import { QuillEditor } from '@vueup/vue-quill'
+import 'quill/dist/quill.core.css'
+import 'quill/dist/quill.snow.css'
 
 const tableData =  ref([])
 const develops=  ref([])
 const testers=  ref([])
-const currentRow=  ref({})
+const currentRow = ref({});
+const reviewDialogVisible = ref(false);
+const editorRef = ref(null);
+const editorContent = ref('');
+const windowWidth = ref(window.innerWidth);
+const windowHeight = ref(window.innerHeight);
 const dialogVisible = ref(false)
 const dialogType = ref('create')
 const dialogTitle = computed(() => {
@@ -300,8 +330,60 @@ const copyYesterdayContent = async () => {
 }
 
 const review = (row) => {
-  currentRow.value = row
-}
+  currentRow.value = row;
+  editorContent.value = row.content;
+  reviewDialogVisible.value = true;
+};
+
+const handleEditorCreated = (editor) => {
+  const toolbar = editor.getModule('toolbar');
+  toolbar.addHandler('image', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async () => {
+      const file = input.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await api.post(`http://localhost/Record/server/upload.php?record_id=${currentRow.value.id}`, formData);
+        const range = editor.getSelection();
+        editor.insertEmbed(range.index, 'image', res.data.url);
+      } catch (error) {
+        console.error('图片上传失败:', error);
+      }
+    };
+    input.click();
+  });
+};
+
+const editorOptions = {
+  modules: {
+    toolbar: [
+      ['bold', 'italic', 'underline', 'strike'],
+      ['blockquote', 'code-block'],
+      [{ 'header': 1 }, { 'header': 2 }],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'script': 'sub'}, { 'script': 'super' }],
+      ['link', 'image'],
+      ['clean']
+    ]
+  }
+};
+
+// 窗口尺寸监听
+const handleResize = () => {
+  windowWidth.value = window.innerWidth;
+  windowHeight.value = window.innerHeight;
+};
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize);
+});
 
 const fetchUserList = async () => {
   try {
@@ -333,7 +415,27 @@ const formatReview = (row) => {
 </script>
 
 <style scoped>
+.editor-container {
+  height: calc(80vh - 100px);
+}
+
+:deep(.w-e-text-container) {
+  height: 600px !important;
+}
+
 .upgrade-record {
   padding: 20px;
+}
+
+.content-container {
+  white-space: pre-wrap;
+  margin-bottom: 16px;
+  padding: 8px;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+}
+
+:deep(.el-table .cell) {
+  white-space: pre-wrap;
 }
 </style>
