@@ -77,7 +77,7 @@ const handleEdit = (row) => {
 
 const handleDelete = async (row) => {
   try {
-    await api.delete(`/api.php?table=user&action=delete&id=${row.id}`);
+    await api.delete(`/api.php?table=user&action=delete&id=${encodeURIComponent(row.id)}`);
     fetchUserList();
   }catch (error) {
     console.error('删除用户失败:', error); 
@@ -88,9 +88,9 @@ const handleDelete = async (row) => {
 const submitForm = async () => {
   try {
     if (currentId.value) {
-      await api.put(`/api.php?table=user&action=update&id=${currentId.value}`, formData.value);
+      await api.put(`/api.php?table=user&action=${encodeURIComponent('update')}&id=${encodeURIComponent(currentId.value)}`, formData.value);
     } else{
-      await api.post('/api.php?table=user&action=create', formData.value);
+      await api.post(`/api.php?table=user&action=${encodeURIComponent('create')}`, formData.value);
     } 
     dialogVisible.value = false;
     fetchUserList();
