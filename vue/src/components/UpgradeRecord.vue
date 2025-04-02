@@ -172,7 +172,7 @@
           :options="editorOptions"
           contentType="html"
           ref="myQuillEditor"
-          style="height: 85%;"
+          style="height: 80%;"
         />
       </div>
       <template #footer>
@@ -520,7 +520,7 @@ const formatReview = (row) => {
 
 <style scoped>
 .editor-container {
-  height: calc((80vh - 200px));
+  height: calc((90vh - 200px));
 }
 
 :deep(.w-e-text-container) {
