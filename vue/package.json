@@ -11,7 +11,9 @@
   "dependencies": {
     "@vueup/vue-quill": "^1.2.0",
     "axios": "^1.8.3",
+    "dompurify": "^3.2.4",
     "element-plus": "^2.9.6",
+    "quill-image-drop-and-paste": "^2.0.1",
     "vue": "^3.5.13",
     "vue-quill": "^1.5.1",
     "vue-router": "^4.5.0",

@@ -58,4 +58,17 @@ class ReviewRecord extends BaseModel {
 
         return $this->returnResult($result);
     }
+
+    public function getById($id) {
+        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE record_id = ?");
+        $stmt->execute([$id]);
+        $query = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if($query == false ){
+            $query = [];
+            $query['id'] = 0;
+        }
+        return $this->returnResult($query);
+    }
+
 }

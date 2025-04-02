@@ -4,7 +4,6 @@ import router from './router'
 import installElementPlus from './plugins/element'
 import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css' // 必选雪花主题样式[3,7](@ref)
-
 const app = createApp(App)
 installElementPlus(app)
 app.use(router)

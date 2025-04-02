@@ -153,17 +153,32 @@
       top="5vh"
     >
       <div class="editor-container">
-        <div class="content-container">{{ currentRow.content }}</div>
+        <div class="content-container">{{ reviewInfo.review_content == null ? '':  reviewInfo.review_content}}</div>
 
+        <el-select
+          v-model="reviewInfo.product_manager_id"
+          placeholder="复盘人员"
+          style="margin-bottom: 16px"
+        >
+          <el-option
+            v-for="pm in ProductManagers"
+            :key="pm.id"
+            :label="pm.username"
+            :value="pm.id"
+          />
+        </el-select>
         <QuillEditor
-          v-model:content="editorContent"
+          v-model:content="conclusion"
           :options="editorOptions"
           contentType="html"
           ref="myQuillEditor"
+          style="height: 85%;"
         />
       </div>
       <template #footer>
-        <el-button @click="reviewDialogVisible = false">关闭</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitFormReview">提交</el-button>
+
       </template>
     </el-dialog>
 
@@ -174,12 +189,19 @@
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
 import api from '@/utils/api.js';
 import { QuillEditor } from '@vueup/vue-quill'
-import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
+import DOMPurify from 'dompurify'
+// import ImageDropAndPaste from 'quill-image-drop-and-paste'
+// QuillEditor.Quill.register('modules/imageDropAndPaste', ImageDropAndPaste)
+import { ElMessage } from 'element-plus'
+
+const myQuillEditor = ref(null)
 
 const tableData =  ref([])
 const develops=  ref([])
 const testers=  ref([])
+const ProductManagers =  ref([])
+
 const currentRow = ref({});
 const reviewDialogVisible = ref(false);
 const editorRef = ref(null);
@@ -188,9 +210,13 @@ const windowWidth = ref(window.innerWidth);
 const windowHeight = ref(window.innerHeight);
 const dialogVisible = ref(false)
 const dialogType = ref('create')
+
+const reviewInfo = ref({'review_content':'', 'conclusion': ''})
 const dialogTitle = computed(() => {
   return dialogType.value === 'create' ? '新增记录' : '编辑记录'
 })
+
+const conclusion = ref('')
 const searchParams = ref({
         start_time: '',
         end_time: '',
@@ -263,10 +289,72 @@ onMounted(() => {
 })
 
 
+const  submitFormReview = async () => {
+    if (reviewInfo.value.product_manager_id == null || reviewInfo.value.product_manager_id == '') {
+      ElMessage.error('请选择复盘人员')
+      return    
+    }
+      // const quill = myQuillEditor.value.getQuill(); // 获取 Quill 实例
+      // const range = quill.getSelection(true); // 当前光标位置[2](@ref)
+      // const deltaString = JSON.stringify(quill.getContents());
+      const cleanHTML = DOMPurify.sanitize(conclusion.value, {
+        ALLOWED_TAGS: ['p', 'strong', 'em', 'img', 'a'], // 自定义允许标签
+        ALLOWED_ATTR: ['href', 'src', 'alt']
+      })
+      const submitData = {
+        country: currentRow.value.country,
+        record_id: currentRow.value.id,
+        review_content: reviewInfo.value.review_content,
+        review_time: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        reviewer: reviewInfo.value.product_manager_id,
+        conclusion: encodeURIComponent(cleanHTML),
+        screenshot_url: '',
+      }
+      try {
+        if (reviewInfo.value.id == null || reviewInfo.value.id == '') {
+          await api.post('/api.php?table=review_record&action=create', submitData);
+        }else{
+          submitData.id = reviewInfo.value.id
+          // await api.post('/api.php?table=review_record&action=update', submitData);
+          await api.put(`/api.php?table=review_record&action=update&id=${reviewInfo.value.id}`, submitData);
+
+
+        }
+        fetchReviewInfo()
+      }catch (error) {
+        console.error('获取记录列表失败:', error); 
+        tableData.value  = [];
+      }
+
+      dialogVisible.value = false;
+    }
+
 const fetchRecords = async () => {
   try {
     const response = await api.post('/api.php?table=upgrade_record&action=list', searchParams.value);
     tableData.value = response.data.data ; 
+  }catch (error) {
+    console.error('获取记录列表失败:', error); 
+    tableData.value  = [];
+  }
+}
+
+const fetchReviewInfo = async () => {
+  try {
+    const response = await api.get('/api.php?table=review_record&action=get&id=' + currentRow.value.id);
+    
+    if(response.data.data.id > 0 ){
+      reviewInfo.value =  response.data.data; 
+      conclusion.value = decodeURIComponent(reviewInfo.value.conclusion);
+
+
+    }else{
+      reviewInfo.value.review_content = currentRow.value.content
+      reviewInfo.value.conclusion = currentRow.value.content
+     
+    }
+  
+
   }catch (error) {
     console.error('获取记录列表失败:', error); 
     tableData.value  = [];
@@ -331,30 +419,9 @@ const copyYesterdayContent = async () => {
 
 const review = (row) => {
   currentRow.value = row;
-  editorContent.value = row.content;
+  // editorContent.value = row.content;
   reviewDialogVisible.value = true;
-};
-
-const handleEditorCreated = (editor) => {
-  const toolbar = editor.getModule('toolbar');
-  toolbar.addHandler('image', () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async () => {
-      const file = input.files[0];
-      const formData = new FormData();
-      formData.append('file', file);
-      try {
-        const res = await api.post(`http://localhost/Record/server/upload.php?record_id=${currentRow.value.id}`, formData);
-        const range = editor.getSelection();
-        editor.insertEmbed(range.index, 'image', res.data.url);
-      } catch (error) {
-        console.error('图片上传失败:', error);
-      }
-    };
-    input.click();
-  });
+  fetchReviewInfo();
 };
 
 const editorOptions = {
@@ -366,10 +433,44 @@ const editorOptions = {
       [{ 'list': 'ordered'}, { 'list': 'bullet' }],
       [{ 'script': 'sub'}, { 'script': 'super' }],
       ['link', 'image'],
-      ['clean']
-    ]
+      ['clean'],['image']
+    ],
+    clipboard: {
+      matchers: [
+        ['img', async (node, delta) => {
+          const src = node.getAttribute('src')
+          console.log('[DEBUG] 粘贴事件：', src);
+          if (src.startsWith('data:')) {
+            // 触发上传逻辑并替换为服务器 URL
+            // return delta.compose(new Delta().insert({ image: 'https://your-uploaded-url' }))
+            try {
+              let baseData = {'image':src,'record_id':currentRow.value?.id}
+              // 前端修改：显式设置请求头
+              const res = await api.post(`/UploadImage.php`, baseData, {
+                headers: { 'Content-Type': 'application/json' }
+              });                
+              console.log('图片上传成功:', res.data);
+                // const range = editor.getSelection();
+                // editor.insertEmbed(range.index, 'image', res.data.url);
+                insertImageToEditor(res.data.url);
+              } catch (error) {
+                console.error('图片上传失败:', error);
+                // ElMessage.error('图片上传失败：' + error.message);
+           }
+          }
+          return delta
+        }]
+      ]
+    }
   }
 };
+
+const insertImageToEditor = (url) => {
+  const quill = myQuillEditor.value.getQuill(); // 获取 Quill 实例
+  const range = quill.getSelection(true); // 当前光标位置[2](@ref)
+  quill.insertEmbed(range.index, 'image', url); // 插入图片[2,7](@ref)
+};
+
 
 // 窗口尺寸监听
 const handleResize = () => {
@@ -393,7 +494,10 @@ const fetchUserList = async () => {
           const element = users[index];
           if (element.position === '测试') {
             testers.value.push(element);   
-          }else{
+          }else if (element.position === '产品') {
+            ProductManagers.value.push(element);    
+          }
+          else{
             develops.value.push(element);
           }
         }
@@ -416,11 +520,11 @@ const formatReview = (row) => {
 
 <style scoped>
 .editor-container {
-  height: calc(80vh - 100px);
+  height: calc((80vh - 200px));
 }
 
 :deep(.w-e-text-container) {
-  height: 600px !important;
+  height: 100% !important;
 }
 
 .upgrade-record {
