@@ -294,10 +294,13 @@ const  submitFormReview = async () => {
       ElMessage.error('请选择复盘人员')
       return    
     }
-      // const quill = myQuillEditor.value.getQuill(); // 获取 Quill 实例
+      const quill = myQuillEditor.value.getQuill(); // 获取 Quill 实例
       // const range = quill.getSelection(true); // 当前光标位置[2](@ref)
       // const deltaString = JSON.stringify(quill.getContents());
-      const cleanHTML = DOMPurify.sanitize(conclusion.value, {
+
+      console.log('更新复盘结论 ----'+quill.getContents());
+
+      const cleanHTML = DOMPurify.sanitize(quill.root.innerHTML, {
         ALLOWED_TAGS: ['p', 'strong', 'em', 'img', 'a'], // 自定义允许标签
         ALLOWED_ATTR: ['href', 'src', 'alt']
       })
@@ -307,7 +310,7 @@ const  submitFormReview = async () => {
         review_content: reviewInfo.value.review_content,
         review_time: new Date().toISOString().slice(0, 19).replace('T', ' '),
         reviewer: reviewInfo.value.product_manager_id,
-        conclusion: encodeURIComponent(cleanHTML),
+        conclusion: encodeURIComponent(quill.root.innerHTML),
         screenshot_url: '',
       }
       try {
@@ -317,9 +320,9 @@ const  submitFormReview = async () => {
           submitData.id = reviewInfo.value.id
           // await api.post('/api.php?table=review_record&action=update', submitData);
           await api.put(`/api.php?table=review_record&action=update&id=${reviewInfo.value.id}`, submitData);
-
-
         }
+
+
         fetchReviewInfo()
       }catch (error) {
         console.error('获取记录列表失败:', error); 
@@ -347,6 +350,7 @@ const fetchReviewInfo = async () => {
       reviewInfo.value =  response.data.data; 
       conclusion.value = decodeURIComponent(reviewInfo.value.conclusion);
 
+      console.log('上次复盘结论 ----'+conclusion.value);
 
     }else{
       reviewInfo.value.review_content = currentRow.value.content
@@ -428,6 +432,8 @@ const editorOptions = {
   modules: {
     toolbar: [
       ['bold', 'italic', 'underline', 'strike'],
+      [{ 'color': [] }, { 'background': [] }], // 颜色选择器
+
       ['blockquote', 'code-block'],
       [{ 'header': 1 }, { 'header': 2 }],
       [{ 'list': 'ordered'}, { 'list': 'bullet' }],
