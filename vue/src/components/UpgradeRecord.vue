@@ -18,6 +18,7 @@
 
     <!-- 数据表格 -->
     <el-table :data="tableData" border>
+      <el-table-column prop="id" label="序号" header-align="center" align="center" width="90" />
       <el-table-column prop="country" label="国家" header-align="center" align="center" width="100"
         :formatter="formatCountry" />
       <el-table-column prop="content" label="升级内容" header-align="center">
