@@ -451,8 +451,40 @@ const handleDelete = async (row) => {
 }
 
 const copyYesterdayContent = async () => {
+  try {
+    // 计算时间范围
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - 2);
 
-}
+    // 筛选最近两天记录
+    const filteredData = tableData.value.filter(record => {
+      const recordTime = new Date(record.update_time);
+      return recordTime >= startDate && recordTime <= endDate;
+    });
+
+    if (filteredData.length === 0) {
+      ElMessage.warning('最近两天没有可复制的升级内容');
+      return;
+    }
+
+    // 格式化文本内容
+    let textContent = '';
+    filteredData.forEach(record => {
+      const countryLabel = countryOptions.value.find(c => c.value === record.country)?.label || record.country;
+      const timeString = record.update_time.replace(/-/g, '/');
+      
+      textContent += `${countryLabel}${record.platform}上线 (${timeString}) 更新内容：\n${record.content}\n\n`;
+    });
+
+    // 复制到剪贴板
+    await navigator.clipboard.writeText(textContent);
+    ElMessage.success('内容已复制到剪贴板');
+  } catch (error) {
+    console.error('复制失败:', error);
+    ElMessage.error('复制失败，请检查控制台');
+  }
+};
 
 const review = (row) => {
   currentRow.value = row;

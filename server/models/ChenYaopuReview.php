@@ -59,6 +59,7 @@ class ChenYaopuReview extends BaseModel {
         if (!empty($conditions)) {
             $sql .= " WHERE " . implode(' AND ', $conditions);
         }
+        $sql .= ' order by date desc';
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
