@@ -3,10 +3,10 @@ require_once 'BaseModel.php';
 
 class ChenYaopuReview extends BaseModel {
     protected $table = 'chen_yaopu_review';
-    protected $fields = ['date', 'purpose', 'initiator', 'participants', 'conclusion', 'screenshot_url'];
+    protected $fields = ['date', 'purpose', 'initiator', 'participants', 'conclusion', 'screenshot_url','content'];
 
     public function create($data) {
-        $sql = "INSERT INTO {$this->table} (date, purpose, initiator, participants,conclusion,screenshot_url) VALUES (?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO {$this->table} (date, purpose, initiator, participants,conclusion,screenshot_url,content) VALUES (?, ?, ?, ?, ?, ?,?)";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
             $data['date'],
@@ -14,14 +14,15 @@ class ChenYaopuReview extends BaseModel {
             $data['initiator'],
             $data['participants'],
             $data['conclusion'],
-            $data['screenshot_url']
+            $data['screenshot_url'],
+            $data['content']
         ]);
         $obj = $this->db->lastInsertId();
         return $this->returnResult($obj);
     }
 
     public function update($id, $data) {
-        $sql = "UPDATE {$this->table} SET date=?, purpose=?, initiator=?, participants=? , conclusion=?, screenshot_url=? WHERE id=?";
+        $sql = "UPDATE {$this->table} SET date=?, purpose=?, initiator=?, participants=? , conclusion=?, screenshot_url=?,content=? WHERE id=?";
         $stmt = $this->db->prepare($sql);
         $obj =  $stmt->execute([
             $data['date'],
@@ -30,6 +31,7 @@ class ChenYaopuReview extends BaseModel {
             $data['participants'],
             $data['conclusion'],
             $data['screenshot_url'],
+            $data['content'],
             $id
         ]);
         return $this->returnResult($obj);

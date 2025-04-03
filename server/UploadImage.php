@@ -30,6 +30,8 @@ if (empty($data['image']) || !isset($data['record_id']) || !is_numeric($data['re
 
 // $userId = $_SESSION['user_id'];
 $recordId = (int)$data['record_id'];
+$type = $data['type'];
+
 $base64String = $data['image'];
 
 try {
@@ -62,6 +64,12 @@ try {
 
   // 创建上传目录
   $uploadDir = __DIR__ . '/upload/';
+  if($type == 'update'){
+    $uploadDir .= 'update/'; 
+  }else if($type == 'review'){
+    $uploadDir.='review/';
+  }
+
   if (!file_exists($uploadDir)) {
     mkdir($uploadDir, 0755, true);
   }
@@ -77,11 +85,17 @@ try {
   // 更新数据库
   // $stmt = $pdo->prepare("UPDATE records SET image_path = ? WHERE id = ?");
   // $stmt->execute([$filePath, $recordId]);
+  $url = "http://10.10.10.95/Record/server/upload/";
+  if($type == 'update'){
+    $url .= 'update/'; 
+  }else if($type == 'review'){
+    $url .= 'review/';
+  }
 
   echo json_encode([
     'status' => 'success',
     'path' => $filePath,
-    'url' => "http://10.10.10.95/Record/server/upload/{$fileName}"
+    'url' => "{$url}{$fileName}"
   ]);
 
 } catch (PDOException $e) {

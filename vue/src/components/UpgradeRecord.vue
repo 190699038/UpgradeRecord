@@ -261,7 +261,8 @@ const handleEditorReady = (quill) => {
       try {
         const res = await api.post(`/UploadImage.php`, {
           image: src,
-          record_id: currentRow.value?.id
+          type: 'update',
+          record_id: currentRow.value?.id ? currentRow.value.id : 0
         }, {
           headers: { 'Content-Type': 'application/json' }
         });
@@ -286,26 +287,7 @@ const handleEditorReady = (quill) => {
     });
     delta.ops = opsList;
     return delta;
-    // const newDelta = delta;
-    // const children = Array.from(node.childNodes);
 
-    // children.forEach(child => {
-    //   if (child.nodeType === Node.TEXT_NODE) {
-    //     const formats = {
-    //       bold: child.parentNode.nodeName === 'STRONG',
-    //       italic: child.parentNode.nodeName === 'EM',
-    //       color: child.parentNode.style.color || ''
-    //     };
-    //     // newDelta.insert(child.textContent, formats);
-    //     const quill = myQuillEditor.value.getQuill(); // 获取 Quill 实例
-    //     const range = quill.getSelection(true); // 当前光标位置[2](@ref)
-    //     const index = range ? range.index : 0;
-
-    //     quill.insertEmbed(index,  'custom-text',{context:child.textContent}); // 插入图片[2,7](@ref)
-    //   }
-    // });
-
-    // return newDelta;
   });
 }
 
@@ -360,9 +342,9 @@ const submitFormReview = async () => {
       // await api.post('/api.php?table=review_record&action=update', submitData);
       await api.put(`/api.php?table=review_record&action=update&id=${reviewInfo.value.id}`, submitData);
     }
-
-
-    fetchReviewInfo()
+    reviewDialogVisible.value = false;
+    fetchRecords()
+    // fetchReviewInfo()
   } catch (error) {
     console.error('获取记录列表失败:', error);
     tableData.value = [];
@@ -442,7 +424,9 @@ const submitForm = async () => {
   try {
     api[method](url, submitData)
     dialogVisible.value = false
-    fetchRecords()
+    setTimeout(() => {
+      fetchRecords()
+    }, 1000)
   } catch (error) {
     console.error('提交表单失败:', error);
   }
