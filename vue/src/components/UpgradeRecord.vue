@@ -92,6 +92,15 @@
         <el-form-item label="备注">
           <el-input v-model="formData.remark" type="textarea" />
         </el-form-item>
+        <el-form-item label="更新时间" prop="update_time">
+          <el-date-picker
+            v-model="formData.update_time"
+            type="datetime"
+            placeholder="选择更新时间"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            style="width: 100%"
+          />
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -169,6 +178,7 @@ const formData = ref({
 })
 const formRules = ref({
   country: [{ required: true, message: '请选择国家', trigger: 'change' }],
+  update_time: [{ required: true, message: '请选择更新时间', trigger: 'change' }],
   content: [{
     required: true,
     message: '请输入升级内容',
@@ -419,7 +429,7 @@ const submitForm = async () => {
     ...formData.value,
     tester: formData.value.tester.join('、'),
     updater: formData.value.updater.join('、'),
-    update_time: new Date().toISOString().slice(0, 19).replace('T', ' ')
+    update_time: formData.value.update_time
   }
   try {
     api[method](url, submitData)
