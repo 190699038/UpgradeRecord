@@ -78,7 +78,7 @@ class UpgradeRecord extends BaseModel {
         if (!empty($where)) {
             $sql .= ' WHERE ' . implode(' AND ', $where);
         }
-        $sql .= ' order by date desc';
+        $sql .= ' order by update_time   desc';
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         $query = $stmt->fetchAll(PDO::FETCH_ASSOC);
