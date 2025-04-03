@@ -20,9 +20,9 @@
     </div>
     <el-table :data="tableData" border>
       <el-table-column prop="date" label="日期" header-align="center" align="center" width="150" />
-      <el-table-column prop="purpose" label="目的" header-align="center" show-overflow-tooltip />
       <el-table-column prop="initiator" label="参会人" header-align="center" align="center" width="120" show-overflow-tooltip />
       <el-table-column prop="participants" label="参与人" header-align="center" align="center" width="120" show-overflow-tooltip />
+      <el-table-column prop="purpose" label="目的" header-align="center" show-overflow-tooltip width="300"/>
       <el-table-column prop="content" label="结论" header-align="center" show-overflow-tooltip>
         <template #default="scope">
           <div style="white-space: pre-line">{{ scope.row.content }}</div>
@@ -36,8 +36,8 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="dialogVisible" :title="dialogType === 'edit' ? '编辑记录' : '新增记录'">
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="80px">
+    <el-dialog v-model="dialogVisible" :title="dialogType === 'edit' ? '编辑记录' : '新增记录'" style="width: 80%;height: 75%;">
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="80px" style="width: 90%; height: 100%;">
         <el-form-item label="日期">
           <el-date-picker
             v-model="formData.date"
@@ -61,18 +61,17 @@
         <!-- <el-form-item label="结论">
           <el-input v-model="formData.conclusion" type="textarea" rows="8"/>
         </el-form-item> -->
-        <el-form-item label="结论" >
-          <div style="width: 100%;height: 100%; display: flex;flex-direction: column;">
+        <el-form-item label="结论">
+          <div style="width: 100%; height: 100%; display: flex; flex-direction: column; flex: 1;">
             <QuillEditor 
-            v-model:content="conclusion"
-            :options="editorOptions"
-            contentType="html"
-            style="height: 200px"
-            ref="myQuillEditor"
-            @ready="handleEditorReady"
-          />
+              v-model:content="conclusion"
+              :options="editorOptions"
+              contentType="html"
+              style="height: 55vh;width: 110%;"
+              ref="myQuillEditor"
+              @ready="handleEditorReady"
+            />
           </div>
-          
         </el-form-item>
       </el-form>
       <template #footer>
@@ -87,6 +86,7 @@
 import { ref, onMounted  } from 'vue'
 import { ElMessageBox,ElMessage } from 'element-plus';
 import { QuillEditor ,Quill} from '@vueup/vue-quill'
+import Delta from 'quill-delta';
 
 import api from '../utils/api'
 import { id } from 'element-plus/es/locales.mjs';
@@ -264,7 +264,8 @@ const editorOptions = ref({
 })
 
 const handleEditorReady = (quill) => {
-  class CustomTextBlot extends Quill.import('blots/text') {
+  const Clipboard = Quill.import('modules/clipboard');
+  class PlainClipboard extends Clipboard {
     static blotName = 'custom-text';
     static tagName = 'span';
     static className = 'custom-text';
@@ -309,7 +310,9 @@ const handleEditorReady = (quill) => {
     return delta;
 
   });
-}
+  // 初始化空Delta对象
+  quill.setContents(new Delta());
+  }
 
 const insertImageToEditor = (url) => {
   const quill = myQuillEditor.value.getQuill(); // 获取 Quill 实例

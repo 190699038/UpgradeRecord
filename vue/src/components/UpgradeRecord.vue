@@ -238,6 +238,14 @@ const is_review_options = ref([
 ])
 
 onMounted(() => {
+  // 初始化默认时间
+  const todayStart = new Date();
+  todayStart.setDate(todayStart.getDate() - 7);
+  todayStart.setHours(0, 0, 0, 0);
+  
+  searchParams.value.start_time = todayStart.toISOString().slice(0, 19).replace('T', ' ');
+  searchParams.value.end_time = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  searchParams.value.country = 'US'
   fetchUserList()
   fetchRecords()
 })
