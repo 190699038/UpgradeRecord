@@ -51,6 +51,12 @@
 
     <!-- 弹窗表单 -->
     <el-dialog :title="dialogTitle" v-model="dialogVisible">
+      <template #header>
+        <div class="dialog-header">
+          <span>{{ dialogTitle }}</span>
+          <el-button type="primary" size="small" @click="openTextParser">解析文本内容</el-button>
+        </div>
+      </template>
       <el-form :model="formData" :rules="formRules" ref="formRef" label-width="80px">
         <el-form-item label="国家" prop="country" l>
           <el-select v-model="formData.country">
@@ -89,9 +95,6 @@
             <el-option v-for="dev in develops" :key="dev.id" :label="dev.username" :value="dev.username" />
           </el-select>
         </el-form-item>
-        <el-form-item label="备注">
-          <el-input v-model="formData.remark" type="textarea" />
-        </el-form-item>
         <el-form-item label="更新时间" prop="update_time">
           <el-date-picker
             v-model="formData.update_time"
@@ -101,6 +104,10 @@
             style="width: 100%"
           />
         </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="formData.remark" type="textarea" />
+        </el-form-item>
+
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -131,6 +138,7 @@
 
 <script setup>
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
+import { ElMessageBox } from 'element-plus';
 import api from '@/utils/api.js';
 import { QuillEditor ,Quill} from '@vueup/vue-quill'
 import 'quill/dist/quill.snow.css'
@@ -512,6 +520,82 @@ const formatReview = (row) => {
   return found ? found.label : row.is_review;
 }
 
+const openTextParser = () => {
+  ElMessageBox.prompt('请输入要解析的文本内容', '内容解析', {
+    inputType: 'textarea',
+    draggable: true,
+    closeOnClickModal: false,
+    beforeClose: (action, instance, done) => {
+      if (action === 'confirm') {
+        if (!instance.inputValue.trim()) {
+          ElMessage.error('请输入要解析的内容')
+          return
+        }
+        parseContent(instance.inputValue)
+      }
+      done()
+    }
+  }).catch(() => {})
+}
+
+const parseContent = (text) => {
+  const patterns = {
+    content: /【更新内容】：([\s\S]*?)(?=ꔷ|\n【|$)/,
+    country: /【地区】：\s*([^\n]+)/,
+    updateTime: /【上线时间[^】]*】：\s*(\d{4})(\d{2})(\d{2})\s*(\d{2}:\d{2})/,
+    updater: /【开发人员[^】]*】：\s*([^\n]+)/,
+    tester: /【测试人员[^】]*】：\s*([^\n]+)/,
+    remark: /【文档地址[^】]*】:?\s*([^\n]+)/
+    }
+
+  const extractField = (regex, text) => {
+    const match = text.match(regex)
+    return match ? match[1].trim() : ''
+  }
+
+  // 国家匹配
+  formData.value.country = countryOptions.value.find(
+    opt => opt.label === extractField(patterns.country, text)
+  )?.value || ''
+
+  // 时间格式转换
+  const timeMatch = text.match(patterns.updateTime)
+  if (timeMatch) {
+    const [_, year, month, day, time] = timeMatch
+    formData.value.update_time = `${year}-${month}-${day} ${time}:00`
+  }
+
+  // 开发人员模糊匹配
+  const devNames = extractField(patterns.updater, text).split(/[、,]/)
+  if (devNames.length) {
+    formData.value.updater = devNames
+      .flatMap(name => 
+        develops.value
+          .filter(dev => dev.username.toLowerCase().includes(name.trim().toLowerCase()))
+          .map(dev => dev.username)
+      )
+      .filter((v,i,a) => a.indexOf(v) === i) // 去重
+  }
+
+  // 测试人员模糊匹配
+  const testerNames = extractField(patterns.tester, text).split(/[、,]/)
+  if (testerNames.length) {
+    formData.value.tester = testerNames
+      .flatMap(name =>
+        testers.value
+          .filter(t => t.username.toLowerCase().includes(name.trim().toLowerCase()))
+          .map(t => t.username)
+      )
+      .filter((v,i,a) => a.indexOf(v) === i) // 去重
+  }
+
+  // 备注信息
+  formData.value.remark = extractField(patterns.remark, text)
+  formData.value.content = extractField(patterns.content, text)
+
+}
+
+
 </script>
 
 <style scoped>
@@ -539,3 +623,4 @@ const formatReview = (row) => {
   white-space: pre-wrap;
 }
 </style>
+

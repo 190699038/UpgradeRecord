@@ -1,0 +1,8 @@
+使用python完成以下内容
+1. 读取巴西升级和复盘记录.xlsx
+2. 逐行输出内容，生成sql语句
+3. 具体对应关系 
+use record;
+insert into record.upgrade_record (country, content, update_time, updater, tester, type, platform, review_conclusion, remark,is_reviewer)
+values
+    ('US','标题','北京时间','更新人员','','类型-BUG修复-bug修复、游戏-新游戏、功能-新功能、功能优化-功能优化','前端 - H5(前端)、服务器(后端)、数据库(数据库)','','备注','是否需要复盘-是1 否0')
