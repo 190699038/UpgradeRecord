@@ -123,10 +123,9 @@
 <script setup>
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
 import api from '@/utils/api.js';
-import { QuillEditor } from '@vueup/vue-quill'
+import { QuillEditor ,Quill} from '@vueup/vue-quill'
 import 'quill/dist/quill.snow.css'
 import DOMPurify from 'dompurify'
-import { Quill } from 'quill'
 // import ImageDropAndPaste from 'quill-image-drop-and-paste'
 // QuillEditor.Quill.register('modules/imageDropAndPaste', ImageDropAndPaste)
 import { ElMessage } from 'element-plus'
@@ -238,6 +237,7 @@ const handleEditorReady = (quill) => {
   
   // 配置图片粘贴处理器
   quill.clipboard.addMatcher('img', async (node, delta) => {
+    console.log('图片粘贴处理器被调用');
     const src = node.getAttribute('src')
     if (src.startsWith('data:')) {
       try {
@@ -257,24 +257,37 @@ const handleEditorReady = (quill) => {
 
   // 配置富文本粘贴处理器
   quill.clipboard.addMatcher(Node.ELEMENT_NODE, async (node, delta) => {
-    const newDelta = delta;
-    const children = Array.from(node.childNodes);
-
-    children.forEach(child => {
-      if (child.nodeType === Node.TEXT_NODE) {
-        const formats = {
-          bold: child.parentNode.nodeName === 'STRONG',
-          italic: child.parentNode.nodeName === 'EM',
-          color: child.parentNode.style.color || ''
-        };
-        // newDelta.insert(child.textContent, formats);
-        const quill = myQuillEditor.value.getQuill(); // 获取 Quill 实例
-        const range = quill.getSelection(true); // 当前光标位置[2](@ref)
-        quill.insertEmbed(range.index,  'custom-text',{context:child.textContent}); // 插入图片[2,7](@ref)
+    console.log('配置富文本粘贴处理器');
+    const opsList = [];
+    delta.ops.forEach(op => {
+      if (op.insert) {
+        opsList.push({
+          insert: op.insert,
+        });
       }
     });
+    delta.ops = opsList;
+    return delta;
+    // const newDelta = delta;
+    // const children = Array.from(node.childNodes);
 
-    return newDelta;
+    // children.forEach(child => {
+    //   if (child.nodeType === Node.TEXT_NODE) {
+    //     const formats = {
+    //       bold: child.parentNode.nodeName === 'STRONG',
+    //       italic: child.parentNode.nodeName === 'EM',
+    //       color: child.parentNode.style.color || ''
+    //     };
+    //     // newDelta.insert(child.textContent, formats);
+    //     const quill = myQuillEditor.value.getQuill(); // 获取 Quill 实例
+    //     const range = quill.getSelection(true); // 当前光标位置[2](@ref)
+    //     const index = range ? range.index : 0;
+
+    //     quill.insertEmbed(index,  'custom-text',{context:child.textContent}); // 插入图片[2,7](@ref)
+    //   }
+    // });
+
+    // return newDelta;
   });
 }
 
@@ -287,8 +300,8 @@ const editorOptions = {
       [{ 'header': 1 }, { 'header': 2 }],
       [{ 'list': 'ordered' }, { 'list': 'bullet' }],
       [{ 'script': 'sub' }, { 'script': 'super' }],
-      ['link', 'image'],
-      ['clean'], ['image']
+      ['link'],
+      ['clean']
     ],
     // Removed clipboard configuration from here
   }
