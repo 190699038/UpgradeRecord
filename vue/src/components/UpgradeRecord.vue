@@ -243,8 +243,16 @@ onMounted(() => {
   todayStart.setDate(todayStart.getDate() - 7);
   todayStart.setHours(0, 0, 0, 0);
   
-  searchParams.value.start_time = todayStart.toISOString().slice(0, 19).replace('T', ' ');
-  searchParams.value.end_time = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  searchParams.value.start_time = new Date(todayStart.getTime() - todayStart.getTimezoneOffset() * 60000)
+  .toISOString()
+  .slice(0, 19)
+  .replace('T', ' ');//todayStart.toISOString().slice(0, 19).replace('T', ' ');
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 0);
+  searchParams.value.end_time = new Date(todayEnd.getTime() - todayEnd.getTimezoneOffset() * 60000)
+  .toISOString()
+  .slice(0, 19)
+  .replace('T', ' ');
   searchParams.value.country = 'US'
   fetchUserList()
   fetchRecords()
@@ -567,7 +575,7 @@ const parseContent = (text) => {
   const patterns = {
     content: /【更新内容】：([\s\S]*?)(?=ꔷ|\n【|$)/,
     country: /【地区】：\s*([^\n]+)/,
-    updateTime: /【上线时间[^】]*】：\s*(\d{4})(\d{2})(\d{2})\s*(\d{2}:\d{2})/,
+    updateTime: /【上线时间（国内）[^】]*】：\s*(\d{4})(\d{2})(\d{2})\s*(\d{2}:\d{2})/,
     updater: /【开发人员[^】]*】：\s*([^\n]+)/,
     tester: /【测试人员[^】]*】：\s*([^\n]+)/,
     remark: /【文档地址[^】]*】:?\s*([^\n]+)/
