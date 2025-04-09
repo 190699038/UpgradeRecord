@@ -20,7 +20,7 @@
     </div>
     <el-table :data="tableData" border>
       <el-table-column prop="date" label="日期" header-align="center" align="center" width="150" />
-      <el-table-column prop="initiator" label="参会人" header-align="center" align="center" width="120" show-overflow-tooltip />
+      <el-table-column prop="initiator" label="发起人" header-align="center" align="center" width="120" show-overflow-tooltip />
       <el-table-column prop="participants" label="参与人" header-align="center" align="center" width="120" show-overflow-tooltip />
       <el-table-column prop="purpose" label="目的" header-align="center" show-overflow-tooltip width="300"/>
       <el-table-column prop="content" label="结论" header-align="center" show-overflow-tooltip>
