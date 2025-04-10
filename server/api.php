@@ -5,6 +5,10 @@ require __DIR__.'/models/UpgradeRecord.php';
 require __DIR__.'/models/User.php';
 require __DIR__.'/models/ReviewRecord.php';
 require __DIR__.'/models/ChenYaopuReview.php';
+require __DIR__.'/models/DailyUpdate.php';
+require __DIR__.'/models/DailyReminder.php';
+require __DIR__.'/models/KeyTask.php';
+
 
 // 处理跨域请求
 header('Access-Control-Allow-Origin: *');
@@ -20,12 +24,14 @@ try {
     $table = $_GET['table'] ?? '';
     $action = $_GET['action'] ?? 'getAll';
     $id = $_GET['id'] ?? null;
-
     $model = match($table) {
         'upgrade_record' => new UpgradeRecord(),
         'user' => new User(),
         'review_record' => new ReviewRecord(),
         'chen_yaopu_review' => new ChenYaopuReview(),
+        'daily_updates' => new DailyUpdate(),
+        'key_tasks' => new KeyTask(),
+        'daily_reminders' => new DailyReminder(),
         default => throw new Exception('Invalid table parameter')
     };
 

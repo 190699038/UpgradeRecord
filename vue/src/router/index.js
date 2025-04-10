@@ -3,6 +3,8 @@ import MainLayout from '@/components/MainLayout.vue'
 import UpgradeRecord from '@/components/UpgradeRecord.vue'
 import ReviewRecord from '@/components/ReviewRecord.vue'
 import UserManagement from '@/components/UserManagement.vue'
+import DailyReminder from '@/components/DailyReminder.vue'
+import KeyTask from '@/components/KeyTask.vue'
 
 export default createRouter({
   history: createWebHashHistory(),
@@ -14,7 +16,9 @@ export default createRouter({
         { path: 'upgrade-record', component: UpgradeRecord },
         { path: 'review-record', component: ReviewRecord },
         { path: 'user-management', component: UserManagement },
-        { path: '', redirect: 'upgrade-record' }
+        { path: 'daily-reminders', component: DailyReminder },
+        { path: 'key-tasks', component: KeyTask },
+        { path: '', redirect: 'key-tasks' }
       ]
     }
   ]
