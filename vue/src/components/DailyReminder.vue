@@ -38,7 +38,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted,computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 // import { getDailyReminders, createDailyReminder, updateDailyReminder, deleteDailyReminder } from '@/utils/api'
 import api from '@/utils/api.js';
@@ -57,13 +57,28 @@ const formatStatus = (row) => {
   return row.status === '1' ? '启用' : '停用'
 }
 
+const dialogTitle = computed(() => {
+  return dialogType.value === 'create' ? '新增记录' : '编辑记录'
+})
+
+
 const loadData = async () => {
+  // try {
+  //   const { data } = await getDailyReminders()
+  //   tableData.value = data
+  // } catch (error) {
+  //   ElMessage.error('获取数据失败')
+  // }
   try {
-    const { data } = await getDailyReminders()
-    tableData.value = data
+    const response = await api.post('/api.php?table=daily_reminders&action=list', {
+      period:selectedWeek.value   })
+
+    tableData.value = response.data.data
   } catch (error) {
     ElMessage.error('获取数据失败')
   }
+
+
 }
 
 const openDialog = (type, row) => {
@@ -103,7 +118,9 @@ const handleDelete = async (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    await deleteDailyReminder(row.id)
+    // await deleteDailyReminder(row.id)
+    await api.delete(`/api.php?table=daily_reminders&action=delete&id=${row.id}`)
+
     await loadData()
     ElMessage.success('删除成功')
   } catch (error) {

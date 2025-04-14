@@ -42,10 +42,10 @@
           <el-input v-model="formData.conclusion" />
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="formData.priority">
-            <el-option label="已完成" value="0" />
-            <el-option label="进行中" value="1" />
-            <el-option label="已暂停" value="2" />
+          <el-select v-model="formData.status">
+            <el-option label="已完成" value="已完成" />
+            <el-option label="进行中" value="进行中" />
+            <el-option label="已暂停" value="已暂停" />
           </el-select>
         </el-form-item>
         <el-form-item label="周期">
@@ -209,7 +209,7 @@ const submitForm = async () => {
 
     } else {
     //   await updateKeyTask(formData.value.id, formData.value)
-        await api.put(`/api.php?table=review_record&action=update&id=${formData.value.id}`, formData.value);
+        await api.put(`/api.php?table=key_tasks&action=update&id=${formData.value.id}`, formData.value);
 
     }
     await loadData()
@@ -227,7 +227,9 @@ const handleDelete = async (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    await deleteKeyTask(row.id)
+    // await deleteKeyTask(row.id)
+    await api.delete(`/api.php?table=key_tasks&action=delete&id=${row.id}`)
+
     await loadData()
     ElMessage.success('删除成功')
   } catch (error) {
