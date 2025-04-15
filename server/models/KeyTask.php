@@ -32,6 +32,17 @@ class KeyTask extends BaseModel
             $data['remark']
         ]);
         $query = $this->db->lastInsertId();
+
+        $sql = "INSERT INTO daily_updates (parent_id, update_date,content,remark) VALUES (?, ?, ?, ?, ?)";
+        $stmt->execute([
+            $query,
+            $data['create_date'],
+            $data['conclusion'],
+            $data['remark']
+        ]);
+        $this->db->lastInsertId();
+
+
         return $this->returnResult($query);
     }
 
@@ -45,6 +56,15 @@ class KeyTask extends BaseModel
             $data['status'],
             $data['period'],
             $data['create_date'],
+            $data['remark'],
+            $id
+        ]);
+
+        $sql = "UPDATE {$this->table} SET update_date=?, content=? , remark=? WHERE parent_id =?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            $data['create_date'],
+            $data['conclusion'],
             $data['remark'],
             $id
         ]);

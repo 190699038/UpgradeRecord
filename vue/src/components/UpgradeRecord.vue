@@ -460,12 +460,10 @@ const handleDelete = async (row) => {
 
 const copyYesterdayContent = async () => {
   try {
-    // 计算时间范围
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(endDate.getDate() - 2);
 
-    // 筛选最近两天记录
     const filteredData = tableData.value.filter(record => {
       const recordTime = new Date(record.update_time);
       return recordTime >= startDate && recordTime <= endDate;
@@ -476,7 +474,6 @@ const copyYesterdayContent = async () => {
       return;
     }
 
-    // 格式化文本内容
     let textContent = '';
     filteredData.forEach(record => {
       const countryLabel = countryOptions.value.find(c => c.value === record.country)?.label || record.country;
@@ -485,12 +482,33 @@ const copyYesterdayContent = async () => {
       textContent += `${countryLabel}${record.platform}上线 (${timeString}) 更新内容：\n${record.content}\n\n`;
     });
 
-    // 复制到剪贴板
-    await navigator.clipboard.writeText(textContent);
+    // 浏览器能力检测
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(textContent);
+    } else {
+      // 降级方案：使用textarea执行复制
+      const textarea = document.createElement('textarea');
+      textarea.value = textContent;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      
+      try {
+        const successful = document.execCommand('copy');
+        if (!successful) throw new Error('复制失败');
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+    
     ElMessage.success('内容已复制到剪贴板');
   } catch (error) {
     console.error('复制失败:', error);
-    ElMessage.error('复制失败，请检查控制台');
+    ElMessage.error({
+      message: '复制失败: ' + (error.message || '请手动复制内容'),
+      duration: 5000
+    });
   }
 };
 

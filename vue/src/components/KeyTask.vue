@@ -1,6 +1,7 @@
 <template>
   <div class="crud-container">
     <el-button type="primary" @click="openDialog('create')">新建关键任务</el-button>
+    <el-button type="primary" @click="copyKeyTasks" style="margin-left: 8px">复制任务内容</el-button>
     <el-select 
       v-model="selectedWeek"
       placeholder="请选择周"
@@ -16,13 +17,17 @@
 
     <el-table :data="tableData" border style="width: 100%; margin-top: 20px">
         <el-table-column prop="id" label="序号" width="120" header-align="center" align="center" border/>
-      <el-table-column prop="task_name" label="任务名称" width="200" border/>
+      <el-table-column prop="task_name" label="任务名称" width="200" header-align="center" align="center" border/>
       <el-table-column prop="owner" label="负责人" width="200" header-align="center" align="center" border/>
-      <el-table-column prop="conclusion" label="当日结论" border/>
-      <el-table-column prop="status" label="状态" header-align="center" align="center" border/>
-      <el-table-column prop="period" label="周期" width="200" header-align="center" align="center" border/>
-      <el-table-column prop="create_date" label="创建日期" width="200" header-align="center" align="center" border/>
-      <el-table-column label="操作" width="200"  header-align="center" align="center" border>
+      <el-table-column prop="conclusion" label="当日结论" border>
+        <template #default="scope">
+          <div style="white-space: pre-line">{{ scope.row.conclusion }}</div>
+        </template>
+      </el-table-column>
+      <el-table-column prop="status" label="状态" header-align="center" width="90" align="center" border/>
+      <el-table-column prop="period" label="周期" width="100" header-align="center"  align="center" border/>
+      <el-table-column prop="create_date" label="创建日期" width="120" header-align="center" align="center" border/>
+      <el-table-column label="操作" width="150"  header-align="center" align="center" border>
         <template #default="scope">
           <el-button size="small" @click="openDialog('edit', scope.row)">编辑</el-button>
           <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
@@ -39,7 +44,11 @@
           <el-input v-model="formData.owner" />
         </el-form-item>
         <el-form-item label="当日结论">
-          <el-input v-model="formData.conclusion" />
+          <el-input
+            v-model="formData.conclusion"
+            type="textarea"
+            :rows="3"
+          />
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="formData.status">
@@ -250,6 +259,44 @@ onMounted(() => {
   selectedWeek.value = `${year}${month}${day}`
   loadData()
 })
+
+const convertToChinese = (num) => {
+  const chineseNumbers = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十','二十一','二十二','二十三','二十四','二十五','二十六' ];
+  return num <= 11 ? chineseNumbers[num - 1] || num : num;
+};
+
+const copyKeyTasks = async () => {
+  try {
+    const text = '本周重点目标进度同步:n'+tableData.value
+      .map((item,index) => `${convertToChinese(index+1)}、${item.task_name} @${item.owner} \n当日结论：\n${item.conclusion.split('\n').map(line => `\t${line}`).join('\n')} \n`)
+      .join('\n');
+
+    // 现代浏览器剪贴板API
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      // 旧版浏览器降级方案
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      
+      const success = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      
+      if (!success) {
+        throw new Error('复制失败');
+      }
+    }
+    ElMessage.success('复制成功');
+  } catch (err) {
+    console.error('复制错误:', err);
+    ElMessage.error('复制失败: ' + (err.message || '不支持的浏览器'));
+  }
+};
+
 </script>
 
 <style scoped>
@@ -260,3 +307,5 @@ onMounted(() => {
   box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
 }
 </style>
+
+

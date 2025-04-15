@@ -1,6 +1,8 @@
 <template>
   <div class="crud-container">
     <el-button type="primary" @click="openDialog('create')">新建每日提醒</el-button>
+    <el-button type="primary" @click="copyReminders" style="margin-left: 8px">复制提醒内容</el-button>
+
     <el-select 
       v-model="selectedWeek"
       @change="handleWeekChange"
@@ -18,7 +20,7 @@
     <el-table :data="tableData" border style="width: 100%; margin-top: 20px">
       <el-table-column prop="remind_date" label="提醒日期" width="180"  header-align="center" align="center" border/>
       <el-table-column prop="content" label="提醒内容" show-overflow-tooltip />
-      <el-table-column prop="owner" label="提醒时间" width="180"  header-align="center" align="center" border/>
+      <el-table-column prop="owner" label="执行人" width="180"  header-align="center" align="center" border/>
       <el-table-column prop="period" label="周期" width="180"  header-align="center" align="center" border/>
       <el-table-column prop="status" label="状态" width="120"  header-align="center" align="center" border/>
       <el-table-column label="操作" width="200"  header-align="center" align="center" border>
@@ -32,7 +34,13 @@
     <el-dialog v-model="dialogVisible" :title="dialogTitle">
       <el-form :model="formData" label-width="100px">
         <el-form-item label="提醒时间">
-          <el-time-picker v-model="formData.remind_date" format="YYYYMMDD" />
+          <el-date-picker
+            v-model="formData.remind_date"
+            type="date"
+            format="YYYYMMDD"
+            value-format="YYYYMMDD"
+            style="width: 240px"
+          />
         </el-form-item>
         <el-form-item label="提醒内容">
           <el-input v-model="formData.content" type="textarea" rows="4" />
@@ -84,7 +92,7 @@ const dialogVisible = ref(false)
 const dialogType = ref('create')
 const formData = ref({
   id: '',
-  reminder_date: '',
+  remind_date: '',
   content: '',
   status: '进行中',
   period: '',
@@ -105,7 +113,7 @@ const loadData = async () => {
   // }
   try {
     const response = await api.post('/api.php?table=daily_reminders&action=list', {
-      period:selectedWeek.value   })
+      period: selectedWeek.value   })
 
     tableData.value = response.data.data
   } catch (error) {
@@ -118,11 +126,11 @@ const loadData = async () => {
 const openDialog = (type, row) => {
   dialogType.value = type
   if (type === 'edit') {
-    formData.value = { ...row }
+    formData.value = { ...row, remind_date: row.remind_date }
   } else {
     formData.value = {
       id: '',
-      reminder_date: '',
+      remind_date: '',
       content: '',
       status: '进行中',
       period: selectedWeek.value,
@@ -230,6 +238,33 @@ onMounted(() => {
 
 const handleWeekChange = () => {
   loadData();
+};
+const copyReminders = async () => {
+  if (tableData.value.length === 0) {
+    ElMessage.warning('暂无数据可复制');
+    return;
+  }
+  
+  const text = "提醒事项:\n"+tableData.value
+    .map((item, index) => `${index + 1}. ${item.content} - @${item.owner}`)
+    .join('\n');
+
+  try {
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+    ElMessage.success('复制成功');
+  } catch (err) {
+    console.error('复制失败:', err);
+    ElMessage.error('复制失败，请手动选择文本复制');
+  }
 };
 </script>
 
