@@ -1,13 +1,28 @@
 <template>
   <div class="crud-container">
     <el-button type="primary" @click="openDialog('create')">新建每日提醒</el-button>
+    <el-select 
+      v-model="selectedWeek"
+      @change="handleWeekChange"
+      placeholder="请选择周"
+      style="margin-left: 8px; width: 240px"
+    >
+      <el-option
+        v-for="week in weekOptions"
+        :key="week.value"
+        :label="week.label"
+        :value="week.value"
+      />
+    </el-select>
     
     <el-table :data="tableData" border style="width: 100%; margin-top: 20px">
-      <el-table-column prop="reminder_time" label="提醒时间" width="180" />
+      <el-table-column prop="remind_date" label="提醒日期" width="180"  header-align="center" align="center" border/>
       <el-table-column prop="content" label="提醒内容" show-overflow-tooltip />
-      <el-table-column prop="status" label="状态" width="120" :formatter="formatStatus" />
-      <el-table-column label="操作" width="200">
-        <template #default="scope">
+      <el-table-column prop="owner" label="提醒时间" width="180"  header-align="center" align="center" border/>
+      <el-table-column prop="period" label="周期" width="180"  header-align="center" align="center" border/>
+      <el-table-column prop="status" label="状态" width="120"  header-align="center" align="center" border/>
+      <el-table-column label="操作" width="200"  header-align="center" align="center" border>
+        <template #default="scope"  header-align="center" align="center" border>
           <el-button size="small" @click="openDialog('edit', scope.row)">编辑</el-button>
           <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
         </template>
@@ -17,16 +32,37 @@
     <el-dialog v-model="dialogVisible" :title="dialogTitle">
       <el-form :model="formData" label-width="100px">
         <el-form-item label="提醒时间">
-          <el-time-picker v-model="formData.reminder_time" format="HH:mm" />
+          <el-time-picker v-model="formData.remind_date" format="YYYYMMDD" />
         </el-form-item>
         <el-form-item label="提醒内容">
           <el-input v-model="formData.content" type="textarea" rows="4" />
         </el-form-item>
+        <el-form-item label="负责人">
+          <el-input v-model="formData.owner" />
+        </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="formData.status">
-            <el-option label="启用" value="1" />
-            <el-option label="停用" value="0" />
+            <el-option label="已完成" value="'已完成" />
+            <el-option label="进行中" value="进行中" />
+            <el-option label="已暂停" value="已暂停" />
           </el-select>
+        </el-form-item>
+        <el-form-item label="周期">
+            <el-select 
+                v-model="formData.period"
+                placeholder="请选择周"
+                style="margin-left: 8px; width: 240px"
+                >
+                <el-option
+                    v-for="week in weekOptions"
+                    :key="week.value"
+                    :label="week.label"
+                    :value="week.value"
+                />
+                </el-select>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="formData.remark" type="textarea" rows="1" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -48,14 +84,12 @@ const dialogVisible = ref(false)
 const dialogType = ref('create')
 const formData = ref({
   id: '',
-  reminder_time: '',
+  reminder_date: '',
   content: '',
-  status: '1'
+  status: '进行中',
+  period: '',
+  remark: ''
 })
-
-const formatStatus = (row) => {
-  return row.status === '1' ? '启用' : '停用'
-}
 
 const dialogTitle = computed(() => {
   return dialogType.value === 'create' ? '新增记录' : '编辑记录'
@@ -88,20 +122,44 @@ const openDialog = (type, row) => {
   } else {
     formData.value = {
       id: '',
-      reminder_time: '',
+      reminder_date: '',
       content: '',
-      status: '1'
+      status: '进行中',
+      period: selectedWeek.value,
+      remark: ''
     }
+
+
+
+
+
   }
   dialogVisible.value = true
 }
 
 const submitForm = async () => {
+  // try {
+  //   if (dialogType.value === 'create') {
+  //     await createDailyReminder(formData.value)
+  //   } else {
+  //     await updateDailyReminder(formData.value.id, formData.value)
+  //   }
+  //   await loadData()
+  //   dialogVisible.value = false
+  //   ElMessage.success('操作成功')
+  // } catch (error) {
+  //   ElMessage.error('操作失败')
+  // }
   try {
+    // 检查必填项
+    console.log(formData.value);
     if (dialogType.value === 'create') {
-      await createDailyReminder(formData.value)
+      await api.post('/api.php?table=daily_reminders&action=create', formData.value);
+
     } else {
-      await updateDailyReminder(formData.value.id, formData.value)
+    //   await updateKeyTask(formData.value.id, formData.value)
+        await api.put(`/api.php?table=daily_reminders&action=update&id=${formData.value.id}`, formData.value);
+
     }
     await loadData()
     dialogVisible.value = false
@@ -109,6 +167,8 @@ const submitForm = async () => {
   } catch (error) {
     ElMessage.error('操作失败')
   }
+
+
 }
 
 const handleDelete = async (row) => {
@@ -128,9 +188,49 @@ const handleDelete = async (row) => {
   }
 }
 
-onMounted(() => {
-  loadData()
+const selectedWeek = ref('')
+const weekOptions = computed(() => {
+  const weeks = []
+  const today = new Date()
+  
+  // 获取当前周的周一
+  const currentMonday = new Date(today)
+  currentMonday.setDate(today.getDate() - today.getDay() + 1)
+  
+  // 生成前7周+当前周共8周+当前周共8周数据
+  for (let i = 7; i >= 0; i--) {
+    const monday = new Date(currentMonday)
+    monday.setDate(currentMonday.getDate() - 7 * i)
+    
+    const year = monday.getFullYear().toString().slice(-2)
+    const month = monday.getMonth() + 1
+    const weekNumber = Math.ceil((monday.getDate() + 6) / 7)
+    
+    weeks.push({
+      value: `${monday.getFullYear()}${String(month).padStart(2, '0')}${String(monday.getDate()).padStart(2, '0')}`,
+      label: `${year}年${month}月第${weekNumber}周-${monday.getFullYear()}${String(month).padStart(2, '0')}${String(monday.getDate()).padStart(2, '0')}`
+    })
+  }
+  return weeks
 })
+
+onMounted(() => {
+ // 设置默认选中当前周
+ const today = new Date()
+  const currentMonday = new Date(today)
+  currentMonday.setDate(today.getDate() - today.getDay() + 1)
+  
+  const year = currentMonday.getFullYear()
+  const month = String(currentMonday.getMonth() + 1).padStart(2, '0')
+  const day = String(currentMonday.getDate()).padStart(2, '0')
+  
+  selectedWeek.value = `${year}${month}${day}` 
+   loadData()
+})
+
+const handleWeekChange = () => {
+  loadData();
+};
 </script>
 
 <style scoped>
