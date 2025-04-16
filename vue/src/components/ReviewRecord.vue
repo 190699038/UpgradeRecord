@@ -171,20 +171,76 @@ const submitForm = async () => {
 
     console.log(value)
     //截取文案中相关内容，赋值给formData
-    //字符串内容如:<p><strong style="color: #ff0000;">目的：xxx</strong></p><p><br></p><p>发起人：xxx</p><p><br></p><p>参会人：xxx</p><p><br></p><p><strong>结论：</strong></p><p>1. </p><p>2. </p><p>3. </p><p>4. </p><p><br></p>
+    //字符串内容如:<p><strong style="color: #ff0000;">目的:xxx</strong></p><p><br></p><p>发起人:xxx</p><p><br></p><p>参会人:xxx</p><p><br></p><p><strong>结论：</strong></p><p>1. </p><p>2. </p><p>3. </p><p>4. </p><p><br></p>
     //截取目的
-    const purpose = value.match(/目的：(.*?)<\/strong>/)[1]
+    //"<p><strong style="color: rgb(255, 0, 0);">目的:</strong><span style="color: rgb(255, 0, 0);">美国代理MVP进度</span></p><p><br></p><p><br></p><p>发起人:陈堯朴</p><p><br></p><p>参会人:陈堯朴、张梁、杨杨&nbsp;、郦一琦</p><p><br></p><p><strong>结论：</strong></p><p>目前从游戏用户转换成代理用户，目前重叠率不高，以及基于目前数据得出</p><p>1.建议考虑扩大用户基数筛选完成MVP(产品中加入代理活动页面) </p><p>2.从已有的美国代理竞品(juwadistributor.com)来看，与国内情况可能存在差异，建议启动美国代理调研，先胜后战&nbsp;(代理来源、代理合作方式、代理利润空间等).</p><p><br></p>"
+    // let purpose = value.match(/目的:(.*?)<\/strong>/)[1]
+    // if(purpose == ''){
+    //    purpose = value.match(/span style="color: rgb(255, 0, 0);">(.*?)<\/span>/)[1]
+    // }
+
+    // 截取目的（增强版正则匹配）
+    const purposeMatch = value.match(/目的:([^<]*)<\/?\w+[^>]*>/i);
+    let purpose = (purposeMatch?.[1] ?? '').trim();
+    // 如果首次匹配失败，尝试备用匹配方案
+    if (!purpose) {
+        const fallbackMatch = value.match(/<span[^>]+>(.*?)<\/span>/i);
+        purpose = (fallbackMatch?.[1] ?? '').trim();
+    }
+
+    if (!purpose) {
+      // 优化后的正则匹配逻辑
+      const fallbackMatch = value.match(/<(strong|span)[^>]+>(?:目的|目标):(.*?)<\/\1>/i);
+      purpose = (fallbackMatch?.[2] ?? '').trim();
+    }
+
+    purpose = purpose.replace('目标:', '');
+    //"<p><strong style="color: rgb(255, 0, 0);">目标:AI客服(大R)今日进度</strong></p><p><br></p><p>发起人:陈堯朴</p><p>参会人:陈堯朴、张梁、杨杨、郦一琦&nbsp;</p><p><br></p><p>结论:</p><p>1.&nbsp;风控第一，AI调取数据接口，需要技术风控介入事前风险控制</p><p>(已经和董陈刚确认过，调取数据接口风险低，风控上没有问题)</p><p><br></p><p>2.&nbsp;活动场景模型评分和用户满意度评分(模型评分待张梁起草后确认，用户满意度评分和张锴楠已经确认过一版)</p><p><br></p><p>3.&nbsp;其它进度</p><p>附(梁浩风提供日常进度同步)</p><p>0410&nbsp;&nbsp;AI工作流进展同步</p><p>【今日进展】：</p><p>1、客服OA用户评分功能需求确认（ 已完成 ，工作量评估2天+）</p><p>2、客服OA接入coze后端开发进度 50%</p><p>【 今日风险点 】</p><p>1、数据风控（杭民、陈刚一起沟通，数据不会暴露到外部，风控风险低）</p><p>【明日目标】：</p><p>1、客服OA接入coze后端开发进度 80% （实现OA和coze消息互通）</p><p>2、coze会话上下文关系调研</p><p>【本周目标（0412）】：</p><p>0412&nbsp;完成第一个demo</p><p>0416完成用户评分功能接入，完成整体闭环</p>"
+
     formData.value.purpose = purpose
     //截取发起人
-    const initiator = value.match(/发起人：(.*?)<\/p>/)[1]
+    const initiatorMatch = value.match(/发起人:(.*?)<\/p>/)
+    let initiator = (initiatorMatch?.[1] ?? '').trim();
+    if( !initiator){
+      const initiatorMatch = value.match(/发起人：(.*?)<\/p>/)
+      initiator = (initiatorMatch?.[1] ?? '').trim();
+    }
     formData.value.initiator = initiator
     //截取参会人
-    const participants = value.match(/参会人：(.*?)<\/p>/)[1]
+    let participantsMatch = value.match(/参会人:(.*?)<\/p>/)
+    let participants = (participantsMatch?.[1]?? '').trim();
+    if(!participants){
+      participantsMatch = value.match(/参会人：(.*?)<\/p>/)
+      participants = (participantsMatch?.[1]?? '').trim();
+    }
+    
     formData.value.participants = participants
     //截取结论
-    const ctent = value.match(/<strong>结论：<\/strong>(.*)/s)[1]
-    .replace(/<\/p\s*\/?>/gi, '\n')
-    .replace(/<[^>]*>/g, '')
+    const ctentzMatch = value.match(/<strong>结论:<\/strong>(.*)/s)
+    let ctent = (ctentzMatch?.[1]?? '').trim();
+    if(!ctent){
+      const ctentzMatch = value.match(/<strong>结论：<\/strong>(.*)/s)
+      ctent = (ctentzMatch?.[1]?? '').trim();
+    }
+
+    if(!ctent){
+      const ctentzMatch = value.match(/<p>结论：<\/p>(.*)/s)
+      ctent = (ctentzMatch?.[1]?? '').trim();
+      if(!ctent){
+        const ctentzMatch = value.match(/<p>结论:<\/p>(.*)/s)
+        ctent = (ctentzMatch?.[1]?? '').trim(); 
+      }
+    }
+
+    if(!ctent){
+      const ctentzMatch = value.match(/<p>结论<\/p>(.*)/s)
+      ctent = (ctentzMatch?.[1]?? '').trim();
+    }
+
+
+    ctent = ctent.replace(/<\/p\s*\/?>/gi, '\n')
+    ctent = ctent.replace(/<[^>]*>/g, '')
+    ctent = ctent.replace(/&nbsp;/g, '')
 
     formData.value.content = ctent
     formData.value.conclusion = content
@@ -233,7 +289,7 @@ const openDialog = (type, row = {}, event) => {
     purpose: '',
     initiator: [],
     participants: [],
-    conclusion: '<p><strong style="color: #ff0000;">目的：xxx</strong></p><p><br></p><p>发起人：xxx</p><p><br></p><p>参会人：xxx</p><p><br></p><p><strong>结论：</strong></p><p>1. </p><p>2. </p><p>3. </p><p>4. </p><p><br></p>'
+    conclusion: '<p><strong style="color: #ff0000;">目的：xxx</strong></p><p><br></p><p>发起人：xxx</p><p><br></p><p>参会人：xxx</p><p><br></p><p><strong>结论：</strong></p><p>一、 </p><p>二、 </p><p>三、 </p><p>4. </p><p><br></p>'
   }
   conclusion.value = formData.value.conclusion
   dialogVisible.value = true

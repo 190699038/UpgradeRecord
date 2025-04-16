@@ -267,7 +267,7 @@ const convertToChinese = (num) => {
 
 const copyKeyTasks = async () => {
   try {
-    const text = '本周重点目标进度同步:n'+tableData.value
+    const text = '本周重点目标进度同步:\n'+tableData.value
       .map((item,index) => `${convertToChinese(index+1)}、${item.task_name} @${item.owner} \n当日结论：\n${item.conclusion.split('\n').map(line => `\t${line}`).join('\n')} \n`)
       .join('\n');
 
