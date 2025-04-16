@@ -1,8 +1,8 @@
 import ExcelJS from 'exceljs';
 
-export const exportTaskToExcel = (data, title) => {
+export const DailyReminderExporter = (data, title) => {
   const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('关键任务');
+  const worksheet = workbook.addWorksheet('每日提醒');
 
   // 标题行
   const titleRow = worksheet.addRow([title]);
@@ -26,7 +26,7 @@ export const exportTaskToExcel = (data, title) => {
   
 
   // 表头
-  const headerRow = worksheet.addRow(['序号', '任务名称', '负责人', '当日结论']);
+  const headerRow = worksheet.addRow(['序号', '状态', '负责人', '当日结论']);
   // 仅在前四列应用样式
   ['A2', 'B2', 'C2', 'D2'].forEach(cellAddress => {
     const cell = worksheet.getCell(cellAddress);
@@ -43,21 +43,10 @@ export const exportTaskToExcel = (data, title) => {
   data.forEach((item, index) => {
     const row = worksheet.addRow([
       item.id,
-      item.task_name,
+      item.status,
       item.owner,
-      item.conclusion
+      item.content
     ]);
-
-    // 交替行颜色
-    if (index % 2 === 0) {
-      row.eachCell(cell => {
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FFF2F2F2' }
-        };
-      });
-    }
 
     row.eachCell(cell => {
       // 状态条件样式
@@ -83,6 +72,17 @@ export const exportTaskToExcel = (data, title) => {
         right: { style: 'thin' }
       };
     });
+
+    // 交替行颜色
+    if (index % 2 === 0) {
+      row.eachCell(cell => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFF2F2F2' }
+        };
+      });
+    }
   });
 
   // 设置行高和列宽
@@ -106,7 +106,7 @@ export const exportTaskToExcel = (data, title) => {
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `关键任务_${new Date().toISOString().slice(0,10)}.xlsx`;
+    link.download = `每日提醒_${new Date().toISOString().slice(0,10)}.xlsx`;
     link.click();
   });
 };

@@ -16,7 +16,8 @@
       />
     </el-select>
 
-    <el-table :data="tableData" border style="width: 100%; margin-top: 20px">
+    <el-table :data="tableData" border style="width: 100%; margin-top: 20px"  :row-style="handleRowStyle"
+    >
         <el-table-column prop="id" label="序号" width="120" header-align="center" align="center" border/>
       <el-table-column prop="task_name" label="任务名称" width="200" header-align="center" align="center" border/>
       <el-table-column prop="owner" label="负责人" width="200" header-align="center" align="center" border/>
@@ -261,6 +262,16 @@ onMounted(() => {
   selectedWeek.value = `${year}${month}${day}`
   loadData()
 })
+
+const handleRowStyle = ({ row }) => {
+  if (row.status === '已完成') {
+    return {
+      backgroundColor: '#f0f9eb',
+      textDecoration: 'line-through'
+    }
+  }
+  return null
+}
 
 const convertToChinese = (num) => {
   const chineseNumbers = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十','二十一','二十二','二十三','二十四','二十五','二十六' ];

@@ -18,7 +18,12 @@
       />
     </el-select>
     
-    <el-table :data="tableData" border style="width: 100%; margin-top: 20px">
+    <el-table 
+      :data="tableData" 
+      border 
+      style="width: 100%; margin-top: 20px"
+      :row-style="handleRowStyle"
+    >
       <el-table-column prop="remind_date" label="提醒日期" width="180"  header-align="center" align="center" border/>
       <el-table-column prop="content" label="提醒内容" show-overflow-tooltip />
       <el-table-column prop="owner" label="执行人" width="180"  header-align="center" align="center" border/>
@@ -51,7 +56,7 @@
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="formData.status">
-            <el-option label="已完成" value="'已完成" />
+            <el-option label="已完成" value="已完成" />
             <el-option label="进行中" value="进行中" />
             <el-option label="已暂停" value="已暂停" />
           </el-select>
@@ -87,7 +92,7 @@ import { ref, onMounted,computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 // import { getDailyReminders, createDailyReminder, updateDailyReminder, deleteDailyReminder } from '@/utils/api'
 import api from '@/utils/api.js';
-import { exportTaskToExcel } from '@/utils/excelExporter';
+import { DailyReminderExporter } from '@/utils/excelExporterReminder';
 
 const tableData = ref([])
 const dialogVisible = ref(false)
@@ -269,22 +274,21 @@ const copyReminders = async () => {
   }
 };
 
-const exportConfig = {
-  title: '每日提醒内容',
-  header: ['序号', '状态', '负责人', '提醒内容'],
-  fields: ['id', 'status', 'owner', 'content'],
-  merges: [{ s: { r: 0, c: 0 }, e: { r: 3, c: 3 } }],
-  styles: {
-    title: { font: { size: 14 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { rgb: '2F5597' } } },
-    header: { font: { size: 14, bold: true }, fill: { type: 'pattern', pattern: 'solid', fgColor: { rgb: '2F5597' } } },
-    rowStyle: { font: { size: 12 }, alignment: { wrapText: true } },
-    colWidths: [10, 12, 12, 21.6]
-  }
-};
+
+
 
 const exportToExcel = () => {
-  exportTaskToExcel(tableData.value, exportConfig);
+  DailyReminderExporter(tableData.value,'每日提醒');
 };
+const handleRowStyle = ({ row }) => {
+  if (row.status === '已完成') {
+    return {
+      backgroundColor: '#f0f9eb',
+      textDecoration: 'line-through'
+    }
+  }
+  return null
+}
 </script>
 
 <style scoped>
