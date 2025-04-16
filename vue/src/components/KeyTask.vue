@@ -2,6 +2,7 @@
   <div class="crud-container">
     <el-button type="primary" @click="openDialog('create')">新建关键任务</el-button>
     <el-button type="primary" @click="copyKeyTasks" style="margin-left: 8px">复制任务内容</el-button>
+    <el-button type="primary" @click="exportToExcel" style="margin-left: 8px">导出到Excel</el-button>
     <el-select 
       v-model="selectedWeek"
       placeholder="请选择周"
@@ -97,6 +98,7 @@ import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus'
 // import { getKeyTasks, createKeyTask, updateKeyTask, deleteKeyTask } from '@/utils/api'
 import api from '@/utils/api.js';
+import { exportTaskToExcel } from '@/utils/excelExporter';
 
 const tableData = ref([])
 const dialogVisible = ref(false)
@@ -297,6 +299,10 @@ const copyKeyTasks = async () => {
   }
 };
 
+const exportToExcel = () => {
+  exportTaskToExcel(tableData.value, '关键任务进度同步');
+};
+
 </script>
 
 <style scoped>
@@ -307,5 +313,6 @@ const copyKeyTasks = async () => {
   box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
 }
 </style>
+
 
 

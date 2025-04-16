@@ -2,6 +2,7 @@
   <div class="crud-container">
     <el-button type="primary" @click="openDialog('create')">新建每日提醒</el-button>
     <el-button type="primary" @click="copyReminders" style="margin-left: 8px">复制提醒内容</el-button>
+    <el-button type="primary" @click="exportToExcel" style="margin-left: 8px">导出到Excel</el-button>
 
     <el-select 
       v-model="selectedWeek"
@@ -86,6 +87,7 @@ import { ref, onMounted,computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 // import { getDailyReminders, createDailyReminder, updateDailyReminder, deleteDailyReminder } from '@/utils/api'
 import api from '@/utils/api.js';
+import { exportTaskToExcel } from '@/utils/excelExporter';
 
 const tableData = ref([])
 const dialogVisible = ref(false)
@@ -265,6 +267,23 @@ const copyReminders = async () => {
     console.error('复制失败:', err);
     ElMessage.error('复制失败，请手动选择文本复制');
   }
+};
+
+const exportConfig = {
+  title: '每日提醒内容',
+  header: ['序号', '状态', '负责人', '提醒内容'],
+  fields: ['id', 'status', 'owner', 'content'],
+  merges: [{ s: { r: 0, c: 0 }, e: { r: 3, c: 3 } }],
+  styles: {
+    title: { font: { size: 14 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { rgb: '2F5597' } } },
+    header: { font: { size: 14, bold: true }, fill: { type: 'pattern', pattern: 'solid', fgColor: { rgb: '2F5597' } } },
+    rowStyle: { font: { size: 12 }, alignment: { wrapText: true } },
+    colWidths: [10, 12, 12, 21.6]
+  }
+};
+
+const exportToExcel = () => {
+  exportTaskToExcel(tableData.value, exportConfig);
 };
 </script>
 
