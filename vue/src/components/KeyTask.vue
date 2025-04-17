@@ -2,6 +2,8 @@
   <div class="crud-container">
     <el-button type="primary" @click="openDialog('create')">新建关键任务</el-button>
     <el-button type="primary" @click="copyKeyTasks" style="margin-left: 8px">复制任务内容</el-button>
+    <!-- <el-button type="primary" @click="copyTableContent" style="margin-left: 8px">复制表格内容</el-button> -->
+    <el-button type="primary" @click="copyScreenshot" style="margin-left: 8px">复制截图</el-button>
     <el-button type="primary" @click="exportToExcel" style="margin-left: 8px">导出到Excel</el-button>
     <el-select v-model="selectedWeek" placeholder="请选择周" style="margin-left: 8px; width: 240px">
       <el-option v-for="week in weekOptions" :key="week.value" :label="week.label" :value="week.value" />
@@ -73,6 +75,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 // import { getKeyTasks, createKeyTask, updateKeyTask, deleteKeyTask } from '@/utils/api'
 import api from '@/utils/api.js';
 import { exportTaskToExcel } from '@/utils/excelExporter';
+import html2canvas from 'html2canvas';
 
 const tableData = ref([])
 const dialogVisible = ref(false)
@@ -266,6 +269,32 @@ const convertToChinese = (num) => {
   return num <= 11 ? chineseNumbers[num - 1] || num : num;
 };
 
+const copyTableContent = async () => {
+  try {
+    const text = '关键任务清单：\n' + tableData.value
+      .map(item => `序号: ${item.id} | 任务名称: ${item.task_name} | 负责人: ${item.owner} | 结论内容:\n${item.conclusion}`)
+      .join('\n\n');
+
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      const success = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      if (!success) throw new Error('复制失败');
+    }
+    ElMessage.success('表格内容复制成功');
+  } catch (err) {
+    console.error('复制错误:', err);
+    ElMessage.error('表格复制失败: ' + (err.message || '不支持的浏览器'));
+  }
+};
+
 const copyKeyTasks = async () => {
   try {
     const text = '本周重点目标进度同步:\n' + tableData.value
@@ -302,6 +331,64 @@ const exportToExcel = () => {
   exportTaskToExcel(tableData.value, '关键任务进度同步');
 };
 
+const copyScreenshot = async () => {
+  try {
+    const originalTable = document.querySelector('.custom-table');
+    
+    // 克隆整个表格结构
+    // 计算前四列总宽度
+    const originalHeaders = Array.from(originalTable.querySelectorAll('th')).slice(0, 4);
+    const totalWidth = originalHeaders.reduce((sum, header) => sum + header.offsetWidth, 0);
+
+    // 克隆并调整表格结构
+    const clonedTable = originalTable.cloneNode(true);
+    clonedTable.style.width = `${totalWidth}px`;
+    
+    // 保留前四列，删除其他列
+    clonedTable.querySelectorAll('tr').forEach(tr => {
+      Array.from(tr.children).forEach((td, index) => {
+        if(index >= 4) td.remove();
+      });
+    });
+
+    // 创建临时容器并应用精确样式
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'fixed';
+    tempDiv.style.left = '0';
+    tempDiv.style.top = '0';
+    tempDiv.style.zIndex = '9999';
+    tempDiv.style.width = `${totalWidth}px`;
+    tempDiv.style.overflow = 'hidden';
+    tempDiv.appendChild(clonedTable);
+    document.body.appendChild(tempDiv);
+
+    // 同步列宽设置
+    clonedTable.querySelectorAll('th, td').forEach((el, index) => {
+      if(index < 4) {
+        el.style.width = `${originalHeaders[index].offsetWidth}px`;
+        el.style.minWidth = `${originalHeaders[index].offsetWidth}px`;
+        el.style.maxWidth = `${originalHeaders[index].offsetWidth}px`;
+        el.style.whiteSpace = 'nowrap';
+        el.style.overflow = 'hidden';
+      }
+    });
+
+    const canvas = await html2canvas(tempDiv);
+    document.body.removeChild(tempDiv);
+
+    canvas.toBlob(blob => {
+      navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob })
+      ]);
+    });
+
+    ElMessage.success('截图已复制到剪贴板');
+  } catch (err) {
+    console.error('截图失败:', err);
+    ElMessage.error('截图失败: ' + (err.message || '不支持的浏览器'));
+  }
+};
+
 </script>
 
 <style scoped>
@@ -313,9 +400,11 @@ const exportToExcel = () => {
 
   :deep(.custom-table) {
     th.table-header {
-      background: #f5f7fa;
+      background: #1890ff;
+      color: white;
       font-weight: 600;
       padding: 12px 0;
+      border-radius: 4px;
     }
 
     td {
