@@ -3,6 +3,7 @@
     <el-button type="primary" @click="openDialog('create')">新建每日提醒</el-button>
     <el-button type="primary" @click="copyReminders" style="margin-left: 8px">复制提醒内容</el-button>
     <el-button type="primary" @click="exportToExcel" style="margin-left: 8px">导出到Excel</el-button>
+    <el-button type="primary" @click="copyScreenshot" style="margin-left: 8px">复制截图</el-button>
 
     <el-select 
       v-model="selectedWeek"
@@ -24,12 +25,12 @@
       style="width: 100%; margin-top: 20px"
       :row-style="handleRowStyle"
     >
-      <el-table-column prop="remind_date" label="提醒日期" width="180"  header-align="center" align="center" border/>
+      <el-table-column prop="remind_date" label="提醒日期" width="180" v-if="!isScreenshotting" header-align="center" align="center" border/>
       <el-table-column prop="content" label="提醒内容" show-overflow-tooltip />
       <el-table-column prop="owner" label="执行人" width="180"  header-align="center" align="center" border/>
-      <el-table-column prop="period" label="周期" width="180"  header-align="center" align="center" border/>
+      <el-table-column prop="period" label="周期" width="180" v-if="!isScreenshotting" header-align="center" align="center" border/>
       <el-table-column prop="status" label="状态" width="120"  header-align="center" align="center" border/>
-      <el-table-column label="操作" width="200"  header-align="center" align="center" border>
+      <el-table-column label="操作" width="200" v-if="!isScreenshotting" header-align="center" align="center" border>
         <template #default="scope"  header-align="center" align="center" border>
           <el-button size="small" @click="openDialog('edit', scope.row)">编辑</el-button>
           <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
@@ -88,7 +89,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted,computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
+import html2canvas from 'html2canvas';
 import { ElMessage, ElMessageBox } from 'element-plus'
 // import { getDailyReminders, createDailyReminder, updateDailyReminder, deleteDailyReminder } from '@/utils/api'
 import api from '@/utils/api.js';
@@ -280,6 +282,58 @@ const copyReminders = async () => {
 
 const exportToExcel = () => {
   DailyReminderExporter(tableData.value,'每日提醒');
+};
+
+const isScreenshotting = ref(false);
+
+const copyScreenshot = async () => {
+  isScreenshotting.value = true;
+  await nextTick();
+  try {
+    const originalTable = document.querySelector('.el-table');
+    const clonedTable = originalTable.cloneNode(true);
+    clonedTable.style.position = 'fixed';
+    clonedTable.style.left = '-9999px';
+    clonedTable.style.width = originalTable.offsetWidth + 'px';
+    document.body.appendChild(clonedTable);
+    
+    const canvas = await html2canvas(clonedTable);
+    document.body.removeChild(clonedTable);
+    canvas.toBlob(async (blob) => {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        ElMessage.success('截图已复制到剪贴板');
+      } catch (error) {
+        console.error('复制失败:', error);
+        ElMessage.error('截图复制失败');
+      }
+    }, 'image/png');
+  } catch (error) {
+    console.error('截图失败:', error);
+    ElMessage.error('截图失败');
+  } finally {
+    isScreenshotting.value = false;
+  }
+  try {
+    const table = document.querySelector('.el-table');
+    const canvas = await html2canvas(table);
+    canvas.toBlob(async (blob) => {
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'image/png': blob
+          })
+        ]);
+        ElMessage.success('截图已复制到剪贴板');
+      } catch (error) {
+        console.error('复制失败:', error);
+        ElMessage.error('截图复制失败');
+      }
+    }, 'image/png');
+  } catch (error) {
+    console.error('截图失败:', error);
+    ElMessage.error('截图失败');
+  }
 };
 const handleRowStyle = ({ row }) => {
   if (row.status === '已完成') {
