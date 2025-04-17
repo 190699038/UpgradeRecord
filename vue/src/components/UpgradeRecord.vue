@@ -214,11 +214,15 @@ const formRules = ref({
 })
 const countryOptions = ref([
   { value: 'US', label: '美国' },
+  { value: 'US2', label: '美国2' },
   { value: 'BR', label: '巴西' },
+  { value: 'BR2', label: '巴西2' },
   { value: 'MX', label: '墨西哥' },
   { value: 'PE', label: '秘鲁' },
   { value: 'CL', label: '智利' },
-  { value: 'AU', label: '澳大利亚' }
+  { value: 'AU', label: '澳大利亚' },
+  { value: 'PH', label: '菲律宾' }
+
 ])
 const typeOptions = ref([
   { value: '新功能', label: '新功能' },
