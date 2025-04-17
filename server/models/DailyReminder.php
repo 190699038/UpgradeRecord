@@ -11,6 +11,7 @@ class DailyReminder extends BaseModel
         'content',
         'owner',
         'status',
+        'period',
         'remark'
     ];
 
@@ -19,13 +20,15 @@ class DailyReminder extends BaseModel
     ];
 
     public function create($data) {
-        $sql = "INSERT INTO {$this->table} (remind_date, content,owner,status,remark) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        var_dump($data);
+        $sql = "INSERT INTO {$this->table} (remind_date, content,owner,status,period ,remark) VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
             $data['remind_date'],
             $data['content'],
             $data['owner'],
             $data['status'],
+            $data['period'],
             $data['remark']
         ]);
         $query = $this->db->lastInsertId();
@@ -33,13 +36,14 @@ class DailyReminder extends BaseModel
     }
 
     public function update($id, $data) {
-        $sql = "UPDATE {$this->table} SET remind_date=?, content=? , owner=? , status=? ,  remark=? WHERE id=?";
+        $sql = "UPDATE {$this->table} SET remind_date=?, content=? , owner=? , status=? ,period=?,  remark=? WHERE id=?";
         $stmt = $this->db->prepare($sql);
         $query = $stmt->execute([
             $data['remind_date'],
             $data['content'],
             $data['owner'],
             $data['status'],
+            $data['period'],
             $data['remark'],
             $id
         ]);

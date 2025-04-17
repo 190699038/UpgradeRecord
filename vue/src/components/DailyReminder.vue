@@ -49,7 +49,7 @@
           />
         </el-form-item>
         <el-form-item label="提醒内容">
-          <el-input v-model="formData.content" type="textarea" rows="4" />
+          <el-input v-model="formData.content" type="textarea" :rows="4" />
         </el-form-item>
         <el-form-item label="负责人">
           <el-input v-model="formData.owner" />
@@ -76,7 +76,7 @@
                 </el-select>
         </el-form-item>
         <el-form-item label="备注">
-          <el-input v-model="formData.remark" type="textarea" rows="1" />
+          <el-input v-model="formData.remark" type="textarea" :rows="1" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -101,6 +101,7 @@ const formData = ref({
   id: '',
   remind_date: '',
   content: '',
+  owner: '',
   status: '进行中',
   period: '',
   remark: ''
@@ -133,7 +134,7 @@ const loadData = async () => {
 const openDialog = (type, row) => {
   dialogType.value = type
   if (type === 'edit') {
-    formData.value = { ...row, remind_date: row.remind_date }
+    formData.value = { ...row }
   } else {
     formData.value = {
       id: '',

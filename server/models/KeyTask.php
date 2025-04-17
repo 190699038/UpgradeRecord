@@ -32,15 +32,17 @@ class KeyTask extends BaseModel
             $data['remark']
         ]);
         $query = $this->db->lastInsertId();
+        echo $data['create_date'];
 
-        $sql = "INSERT INTO daily_updates (parent_id, update_date,content,remark) VALUES (?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO daily_updates (parent_id, update_date,content,remark) VALUES (?, ?, ?, ?)";
+        $stmt = $this->db->prepare($sql);
+
         $stmt->execute([
             $query,
             $data['create_date'],
             $data['conclusion'],
             $data['remark']
         ]);
-        $this->db->lastInsertId();
 
 
         return $this->returnResult($query);
@@ -60,14 +62,32 @@ class KeyTask extends BaseModel
             $id
         ]);
 
-        $sql = "UPDATE {$this->table} SET update_date=?, content=? , remark=? WHERE parent_id =?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            $data['create_date'],
-            $data['conclusion'],
-            $data['remark'],
-            $id
-        ]);
+        $checkStmt = $this->db->prepare("SELECT id FROM daily_updates WHERE parent_id =? and update_date = ?");
+        $checkStmt->execute([$id,date('Ymd')]);
+        if ($checkStmt->fetch()) {
+            $sql = "UPDATE daily_updates SET update_date=?, content=? , remark=? WHERE parent_id =? and update_date = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                $data['create_date'],
+                $data['conclusion'],
+                $data['remark'],
+                $id,
+                date('Ymd'),
+
+            ]);
+        }else{
+            $sql = "INSERT INTO daily_updates (parent_id, update_date,content,remark) VALUES (?, ?, ?, ?)";
+            $stmt = $this->db->prepare($sql);
+
+            $stmt->execute([
+                $id,
+                date('Ymd'),
+                $data['conclusion'],
+                $data['remark']
+            ]);
+        }
+
+       
 
         return $this->returnResult($query);
 
