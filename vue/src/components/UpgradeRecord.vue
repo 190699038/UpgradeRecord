@@ -13,11 +13,13 @@
           :value="country.value" />
       </el-select>
       <el-button type="primary" @click="fetchRecords">查询</el-button>
-      <el-button @click="copyYesterdayContent">复制昨日上线内容</el-button>
+      <el-button  type="primary" @click="copyYesterdayContent">复制昨日上线内容</el-button>
+      <el-button type="primary" @click="copyScreenshot" style="margin-left: 8px">复制截图</el-button>
+
     </div>
 
     <!-- 数据表格 -->
-    <el-table :data="tableData" border>
+    <el-table :data="tableData" border class="custom-table">
       <el-table-column prop="id" label="序号" header-align="center" align="center" width="90" />
       <el-table-column prop="country" label="国家" header-align="center" align="center" width="100"
         :formatter="formatCountry" />
@@ -32,13 +34,14 @@
         show-overflow-tooltip />
       <el-table-column prop="tester" label="测试" header-align="center" align="center" width="100"
         show-overflow-tooltip />
+        <el-table-column prop="update_time" label="更新时间" header-align="center" align="center" width="200" />
+
       <el-table-column prop="is_review" label="复盘" header-align="center" align="center" width="100"
         show-overflow-tooltip :formatter="formatReview" />
 
       <el-table-column prop="remark" label="备注" header-align="center" align="center" width="100"
         show-overflow-tooltip />
 
-      <el-table-column prop="update_time" label="更新时间" header-align="center" align="center" width="150" />
       <el-table-column label="操作" width="150" header-align="center" align="center">
         <template #default="scope">
           <el-button size="small" @click="openDialog('edit', scope.row)">编辑</el-button>
@@ -143,7 +146,7 @@ import { ElMessageBox } from 'element-plus';
 import api from '@/utils/api.js';
 import { QuillEditor ,Quill} from '@vueup/vue-quill'
 import 'quill/dist/quill.snow.css'
-import DOMPurify from 'dompurify'
+import html2canvas from 'html2canvas';
 // import ImageDropAndPaste from 'quill-image-drop-and-paste'
 // QuillEditor.Quill.register('modules/imageDropAndPaste', ImageDropAndPaste)
 import { ElMessage } from 'element-plus'
@@ -650,6 +653,77 @@ const parseContent = (text) => {
 
 }
 
+const copyScreenshot = async () => {
+  try {
+    const originalTable = document.querySelector('.custom-table');
+    
+    // 克隆整个表格结构
+    // 计算前四列总宽度
+    const originalHeaders = Array.from(originalTable.querySelectorAll('th')).slice(0, 8);
+    const totalWidth = originalHeaders.reduce((sum, header) => sum + header.offsetWidth, 0);
+
+    // 克隆并调整表格结构
+    const clonedTable = originalTable.cloneNode(true);
+    clonedTable.style.width = `${totalWidth}px`;
+    
+    // 保留前四列，删除其他列
+    clonedTable.querySelectorAll('tr').forEach(tr => {
+      Array.from(tr.children).forEach((td, index) => {
+        if(index >= 8) td.remove();
+      });
+    });
+
+    // 创建临时容器并应用精确样式
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'fixed';
+    tempDiv.style.left = '0';
+    tempDiv.style.top = '0';
+    tempDiv.style.zIndex = '9999';
+    tempDiv.style.width = `${totalWidth}px`;
+    tempDiv.style.overflow = 'hidden';
+    tempDiv.appendChild(clonedTable);
+    document.body.appendChild(tempDiv);
+
+    // 同步列宽设置
+    // clonedTable.querySelectorAll('th, td').forEach((el, index) => {
+    //   if(index < 8) {
+    //     el.style.width = `${originalHeaders[index].offsetWidth}px`;
+    //     el.style.minWidth = `${originalHeaders[index].offsetWidth}px`;
+    //     el.style.maxWidth = `${originalHeaders[index].offsetWidth}px`;
+    //     el.style.whiteSpace = 'nowrap';
+    //     el.style.overflow = 'hidden';
+    //   }
+    // });
+
+    const canvas = await html2canvas(tempDiv, {
+  scale: window.devicePixelRatio * 2,
+  scrollX: -window.scrollX,
+  scrollY: -window.scrollY,
+  width: tempDiv.scrollWidth,
+  windowWidth: tempDiv.scrollWidth,
+  useCORS: true,
+  logging: true,
+  scale: window.devicePixelRatio * 2,
+  scrollX: -window.scrollX,
+  scrollY: -window.scrollY,
+  width: tempDiv.scrollWidth,
+  windowWidth: tempDiv.scrollWidth
+});
+    document.body.removeChild(tempDiv);
+
+    canvas.toBlob(blob => {
+      navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob })
+      ]);
+    });
+
+    ElMessage.success('截图已复制到剪贴板');
+  } catch (err) {
+    console.error('截图失败:', err);
+    ElMessage.error('截图失败: ' + (err.message || '不支持的浏览器'));
+  }
+};
+
 
 </script>
 
@@ -661,6 +735,26 @@ const parseContent = (text) => {
 :deep(.w-e-text-container) {
   height: 100% !important;
 }
+
+:deep(.custom-table) {
+    margin-top: 20px;
+    min-width: 1600px;
+    overflow-x: visible;
+    
+    th.table-header {
+      background: #1890ff;
+      color: white;
+      font-weight: 600;
+      padding: 12px 0;
+      border-radius: 4px;
+    }
+  }
+
+.container {
+  overflow-x: auto;
+  padding: 20px;
+}
+
 
 .upgrade-record {
   padding: 20px;

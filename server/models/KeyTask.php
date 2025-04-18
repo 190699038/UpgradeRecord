@@ -32,7 +32,7 @@ class KeyTask extends BaseModel
             $data['remark']
         ]);
         $query = $this->db->lastInsertId();
-        echo $data['create_date'];
+        // echo $data['create_date'];
 
         $sql = "INSERT INTO daily_updates (parent_id, update_date,content,remark) VALUES (?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);

@@ -16,9 +16,10 @@
         value-format="YYYYMMDD"
       />
       <el-button type="primary" @click="fetchRecords">查询</el-button>
+      <el-button type="primary" @click="copyScreenshot" style="margin-left: 8px">复制截图</el-button>
 
     </div>
-    <el-table :data="tableData" border>
+    <el-table :data="tableData" border class="custom-table">
       <el-table-column prop="date" label="日期" header-align="center" align="center" width="150" />
       <el-table-column prop="initiator" label="发起人" header-align="center" align="center" width="120" show-overflow-tooltip />
       <el-table-column prop="participants" label="参与人" header-align="center" align="center" width="120" show-overflow-tooltip />
@@ -87,6 +88,7 @@ import { ref, onMounted  } from 'vue'
 import { ElMessageBox,ElMessage } from 'element-plus';
 import { QuillEditor ,Quill} from '@vueup/vue-quill'
 import Delta from 'quill-delta';
+import html2canvas from 'html2canvas';
 
 import api from '../utils/api'
 import { id } from 'element-plus/es/locales.mjs';
@@ -376,6 +378,76 @@ const insertImageToEditor = (url) => {
   quill.insertEmbed(range.index, 'image', url); // 插入图片[2,7](@ref)
 };
 
+const copyScreenshot = async () => {
+  try {
+    const originalTable = document.querySelector('.custom-table');
+    
+    // 克隆整个表格结构
+    // 计算前四列总宽度
+    const originalHeaders = Array.from(originalTable.querySelectorAll('th')).slice(0, 5);
+    const totalWidth = originalHeaders.reduce((sum, header) => sum + header.offsetWidth, 0);
+
+    // 克隆并调整表格结构
+    const clonedTable = originalTable.cloneNode(true);
+    clonedTable.style.width = `${totalWidth}px`;
+    
+    // 保留前四列，删除其他列
+    clonedTable.querySelectorAll('tr').forEach(tr => {
+      Array.from(tr.children).forEach((td, index) => {
+        if(index >= 5) td.remove();
+      });
+    });
+
+    // 创建临时容器并应用精确样式
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'fixed';
+    tempDiv.style.left = '0';
+    tempDiv.style.top = '0';
+    tempDiv.style.zIndex = '9999';
+    tempDiv.style.width = `${totalWidth}px`;
+    tempDiv.style.overflow = 'hidden';
+    tempDiv.appendChild(clonedTable);
+    document.body.appendChild(tempDiv);
+
+    // 同步列宽设置
+    // clonedTable.querySelectorAll('th, td').forEach((el, index) => {
+    //   if(index < 8) {
+    //     el.style.width = `${originalHeaders[index].offsetWidth}px`;
+    //     el.style.minWidth = `${originalHeaders[index].offsetWidth}px`;
+    //     el.style.maxWidth = `${originalHeaders[index].offsetWidth}px`;
+    //     el.style.whiteSpace = 'nowrap';
+    //     el.style.overflow = 'hidden';
+    //   }
+    // });
+
+    const canvas = await html2canvas(tempDiv, {
+  scale: window.devicePixelRatio * 2,
+  scrollX: -window.scrollX,
+  scrollY: -window.scrollY,
+  width: tempDiv.scrollWidth,
+  windowWidth: tempDiv.scrollWidth,
+  useCORS: true,
+  logging: true,
+  scale: window.devicePixelRatio * 2,
+  scrollX: -window.scrollX,
+  scrollY: -window.scrollY,
+  width: tempDiv.scrollWidth,
+  windowWidth: tempDiv.scrollWidth
+});
+    document.body.removeChild(tempDiv);
+
+    canvas.toBlob(blob => {
+      navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob })
+      ]);
+    });
+
+    ElMessage.success('截图已复制到剪贴板');
+  } catch (err) {
+    console.error('截图失败:', err);
+    ElMessage.error('截图失败: ' + (err.message || '不支持的浏览器'));
+  }
+};
 </script>
 
 <style scoped>
@@ -384,7 +456,19 @@ const insertImageToEditor = (url) => {
   display: flex;
   gap: 10px;
 }
-
+:deep(.custom-table) {
+    margin-top: 20px;
+    min-width: 1600px;
+    overflow-x: visible;
+    
+    th.table-header {
+      background: #1890ff;
+      color: white;
+      font-weight: 600;
+      padding: 12px 0;
+      border-radius: 4px;
+    }
+  }
 .el-date-editor {
   width: 200px;
 }
