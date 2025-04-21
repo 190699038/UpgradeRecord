@@ -5,12 +5,12 @@
     <!-- <el-button type="primary" @click="copyTableContent" style="margin-left: 8px">复制表格内容</el-button> -->
     <el-button type="primary" @click="copyScreenshot" style="margin-left: 8px">复制截图</el-button>
     <el-button type="primary" @click="exportToExcel" style="margin-left: 8px">导出到Excel</el-button>
-    <el-select v-model="selectedWeek" placeholder="请选择周" style="margin-left: 8px; width: 240px">
+    <el-select v-model="selectedWeek" placeholder="请选择周" style="margin-left: 8px; width: 240px" @change="handleWeekChange">
       <el-option v-for="week in weekOptions" :key="week.value" :label="week.label" :value="week.value" />
     </el-select>
 
     <el-table :data="tableData" border stripe style="width: 100%; margin-top: 20px" :row-style="handleRowStyle"
-      :cell-style="cellStyle" header-cell-class-name="table-header" class="custom-table">
+      :cell-style="cellStyle" header-cell-class-name="table-header" class="custom-table"  :key="refreshKey">
       <el-table-column prop="id" label="序号" width="120" header-align="center" align="center" border />
       <el-table-column prop="task_name" label="任务名称" width="200" header-align="center" align="center" border />
       <el-table-column prop="owner" label="负责人" width="200" header-align="center" align="center" border />
@@ -89,6 +89,7 @@ const formData = ref({
   period: '',
   create_date: ''
 })
+const refreshKey = ref(0)
 
 const dialogTitle = computed(() => {
   return dialogType.value === 'create' ? '新增记录' : '编辑记录'
@@ -164,7 +165,7 @@ const loadData = async () => {
     const response = await api.post('/api.php?table=key_tasks&action=list', {
       period: selectedWeek.value
     })
-
+    refreshKey.value++ // 触发重新渲染
     tableData.value = response.data.data
   } catch (error) {
     ElMessage.error('获取数据失败')
@@ -208,6 +209,14 @@ const submitForm = async () => {
     ElMessage.error('操作失败')
   }
 }
+
+const handleWeekChange = async (value) => {
+  try {
+    await loadData()
+    ElMessage.success('数据已刷新')
+  } catch (error) {
+    ElMessage.error('刷新失败: ' + (error.message || '未知错误'))
+  }}
 
 const handleDelete = async (row) => {
   try {
