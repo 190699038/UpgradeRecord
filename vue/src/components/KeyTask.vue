@@ -8,8 +8,17 @@
     <el-select v-model="selectedWeek" placeholder="请选择周" style="margin-left: 8px; width: 240px" @change="handleWeekChange">
       <el-option v-for="week in weekOptions" :key="week.value" :label="week.label" :value="week.value" />
     </el-select>
-
-    <el-table :data="tableData" border stripe style="width: 100%; margin-top: 20px" :row-style="handleRowStyle"
+    <el-select
+      v-model="selectedStatus"
+      placeholder="状态筛选"
+      style="margin-left: 8px; width: 240px"
+    >
+      <el-option label="全部" value="" />
+      <el-option label="已完成" value="已完成" />
+      <el-option label="进行中" value="进行中" />
+      <el-option label="已暂停" value="已暂停" />
+    </el-select>
+    <el-table :data="filteredData" border stripe style="width: 100%; margin-top: 20px" :row-style="handleRowStyle"
       :cell-style="cellStyle" header-cell-class-name="table-header" class="custom-table"  :key="refreshKey">
       <el-table-column prop="id" label="序号" width="120" header-align="center" align="center" border />
       <el-table-column prop="task_name" label="任务名称" width="200" header-align="center" align="center" border />
@@ -95,7 +104,17 @@ const dialogTitle = computed(() => {
   return dialogType.value === 'create' ? '新增记录' : '编辑记录'
 })
 
+// 新增响应式变量
+const selectedStatus = ref('')
 
+// 更新过滤逻辑
+const filteredData = computed(() => {
+  return tableData.value.filter(item => {
+    const weekMatch = item.period === selectedWeek.value
+    const statusMatch = !selectedStatus.value || item.status === selectedStatus.value
+    return weekMatch && statusMatch
+  })
+})
 const formatPriority = (row) => {
   const map = { '3': '高', '2': '中', '1': '低' }
   return map[row.priority] || '-'
@@ -436,3 +455,7 @@ const copyScreenshot = async () => {
   }
 }
 </style>
+
+
+
+

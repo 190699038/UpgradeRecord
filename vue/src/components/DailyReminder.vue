@@ -18,9 +18,20 @@
         :value="week.value"
       />
     </el-select>
+
+    <el-select
+      v-model="selectedStatus"
+      placeholder="状态筛选"
+      style="margin-left: 8px; width: 240px"
+    >
+      <el-option label="全部" value="" />
+      <el-option label="已完成" value="已完成" />
+      <el-option label="进行中" value="进行中" />
+      <el-option label="已暂停" value="已暂停" />
+    </el-select>
     
     <el-table 
-      :data="tableData" 
+      :data="filteredData"
       border 
       style="width: 100%; margin-top: 20px"
       :row-style="handleRowStyle"
@@ -56,7 +67,11 @@
           <el-input v-model="formData.owner" />
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="formData.status">
+          <el-select 
+            v-model="formData.status"
+            placeholder="请选择状态"
+            style="margin-left: 8px; width: 240px"
+          >
             <el-option label="已完成" value="已完成" />
             <el-option label="进行中" value="进行中" />
             <el-option label="已暂停" value="已暂停" />
@@ -97,6 +112,15 @@ import api from '@/utils/api.js';
 import { DailyReminderExporter } from '@/utils/excelExporterReminder';
 
 const tableData = ref([])
+const selectedStatus = ref('')
+
+const filteredData = computed(() => {
+  return tableData.value.filter(item => {
+    const weekMatch = item.period === selectedWeek.value
+    const statusMatch = !selectedStatus.value || item.status === selectedStatus.value
+    return weekMatch && statusMatch
+  })
+})
 const dialogVisible = ref(false)
 const dialogType = ref('create')
 const formData = ref({
