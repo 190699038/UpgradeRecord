@@ -574,9 +574,8 @@ const formatCountry = (row) => {
 }
 
 const formatReview = (row) => {
-  const found = is_review_options.value.find(opt => opt.value === row.is_review);
-  return found ? found.label : row.is_review;
-}
+  return row.is_review === 1 || row.is_review === "1" ? '复盘' : '不复盘';
+};
 
 const openTextParser = () => {
   ElMessageBox.prompt('请输入要解析的文本内容', '内容解析', {
@@ -597,13 +596,14 @@ const openTextParser = () => {
 }
 
 const parseContent = (text) => {
+  text = text.replace(/：/g, ":")
   const patterns = {
-    content: /【更新内容】：([\s\S]*?)(?=ꔷ|\n【|$)/,
-    country: /【地区】：\s*([^\n]+)/,
-    updateTime: /【上线时间（国内）[^】]*】：\s*(\d{4})(\d{2})(\d{2})\s*(\d{2}:\d{2})/,
-    updater: /【开发人员[^】]*】：\s*([^\n]+)/,
-    tester: /【测试人员[^】]*】：\s*([^\n]+)/,
-    remark: /【文档地址[^】]*】:?\s*([^\n]+)/
+    content: /【更新内容】[：:]([\s\S]*?)(?=ꔷ|\n【|$)/,
+    country: /【地区】[：:]\s*([^\n]+)/,
+    updateTime: /【上线时间（国内）[^】]*】[：:]\s*(\d{4})(\d{2})(\d{2})\s*(\d{2}[：:]\d{2})/, // 新增的正则表达式模式
+    updater: /【开发人员[^】]*】[：:]\s*([^\n]+)/,
+    tester: /【测试人员[^】]*】[：:]\s*([^\n]+)/,
+    remark: /【文档地址\/禅道地址】[：:][\s]*([\s\S]*?)(?=\nꔷ |$)/
     }
 
   const extractField = (regex, text) => {
@@ -621,6 +621,7 @@ const parseContent = (text) => {
   if (timeMatch) {
     const [_, year, month, day, time] = timeMatch
     formData.value.update_time = `${year}-${month}-${day} ${time}:00`
+    formData.value.update_time  = formData.value.update_time.replace(/：/g, ":")
   }
 
   // 开发人员模糊匹配
@@ -650,6 +651,10 @@ const parseContent = (text) => {
   // 备注信息
   formData.value.remark = extractField(patterns.remark, text)
   formData.value.content = extractField(patterns.content, text)
+  formData.value.is_review = '0'
+  // platform.label = '否'
+  formData.value.platform = '前端'
+  formData.value.type='功能优化'
 
 }
 
