@@ -28,13 +28,13 @@
           <div style="white-space: pre-line">{{ scope.row.content }}</div>
         </template>
       </el-table-column>
-      <el-table-column prop="type" label="类型" header-align="center" align="center" width="90" />
-      <el-table-column prop="platform" label="平台" header-align="center" align="center" width="60" />
       <el-table-column prop="updater" label="研发" header-align="center" align="center" width="100"
         show-overflow-tooltip />
+      <el-table-column prop="update_time" label="更新时间" header-align="center" align="center" width="200" />
+      <el-table-column prop="type" label="类型" header-align="center" align="center" width="90" />
+      <el-table-column prop="platform" label="平台" header-align="center" align="center" width="60" />
       <el-table-column prop="tester" label="测试" header-align="center" align="center" width="100"
         show-overflow-tooltip />
-        <el-table-column prop="update_time" label="更新时间" header-align="center" align="center" width="200" />
 
       <el-table-column prop="is_review" label="复盘" header-align="center" align="center" width="100"
         show-overflow-tooltip :formatter="formatReview" />
@@ -664,7 +664,7 @@ const copyScreenshot = async () => {
     
     // 克隆整个表格结构
     // 计算前四列总宽度
-    const originalHeaders = Array.from(originalTable.querySelectorAll('th')).slice(0, 8);
+    const originalHeaders = Array.from(originalTable.querySelectorAll('th')).slice(0, 4);
     const totalWidth = originalHeaders.reduce((sum, header) => sum + header.offsetWidth, 0);
 
     // 克隆并调整表格结构
@@ -745,7 +745,7 @@ const copyScreenshot = async () => {
     margin-top: 20px;
     min-width: 1600px;
     overflow-x: visible;
-    
+    background: #004bff;
     th.table-header {
       background: #1890ff;
       color: white;
@@ -753,7 +753,33 @@ const copyScreenshot = async () => {
       padding: 12px 0;
       border-radius: 4px;
     }
+    td {
+      border-style: 2px solid #ebeef5;
+    }
+    :deep(.el-table th.el-table__cell) {
+  border: 1px solid #d0d7e5 !important;
+}
   }
+
+  :deep(.el-table) {
+  border: 1px solid #d0d7e5;
+  font-family: '微软雅黑';
+}
+
+:deep(.el-table th) {
+  background: #004bff;
+  /* color: white; */
+  font-weight: bold;
+}
+
+:deep(.el-table__row--striped) {
+  background: #f8f9fa;
+}
+
+:deep(.el-table__cell) {
+  border-right: 1px solid #d0d7e5 !important;
+  border-bottom: 1px solid #d0d7e5 !important;
+}
 
 .container {
   overflow-x: auto;
@@ -775,6 +801,33 @@ const copyScreenshot = async () => {
 
 :deep(.el-table .cell) {
   white-space: pre-wrap;
+}
+.custom-table {
+  border-collapse: collapse;
+  width: 100%;
+  background-color: #f9f9f9;
+}
+
+.custom-table th, .custom-table td {
+  border: 1px solid #dcdcdc;
+  padding: 8px;
+  text-align: left;
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+  color: #333;
+}
+
+.custom-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.custom-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.custom-table tr:hover {
+  background-color: #e0e0e0;
 }
 </style>
 

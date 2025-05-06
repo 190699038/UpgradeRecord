@@ -11,8 +11,7 @@
     <el-select
       v-model="selectedStatus"
       placeholder="状态筛选"
-      style="margin-left: 8px; width: 240px"
-    >
+      style="margin-left: 8px; width: 240px">
       <el-option label="全部" value="" />
       <el-option label="已完成" value="已完成" />
       <el-option label="进行中" value="进行中" />
@@ -453,6 +452,27 @@ const copyScreenshot = async () => {
   .el-table--striped .el-table__body tr.el-table__row--striped td {
     background: #fafafa;
   }
+
+  :deep(.el-table) {
+  border: 1px solid #d0d7e5;
+  font-family: '微软雅黑';
+}
+
+:deep(.el-table th) {
+  background: #004bff;
+  /* color: white; */
+  font-weight: bold;
+}
+
+:deep(.el-table__row--striped) {
+  background: #f8f9fa;
+}
+
+:deep(.el-table__cell) {
+  border-right: 1px solid #d0d7e5 !important;
+  border-bottom: 1px solid #d0d7e5 !important;
+}
+
 }
 </style>
 

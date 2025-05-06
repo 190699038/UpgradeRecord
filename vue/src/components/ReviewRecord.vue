@@ -472,9 +472,26 @@ const copyScreenshot = async () => {
 .el-date-editor {
   width: 200px;
 }
-</style>
+:deep(.el-table) {
+  border: 1px solid #d0d7e5;
+  font-family: '微软雅黑';
+}
 
-<style scoped>
+:deep(.el-table th) {
+  background: #004bff;
+  /* color: white; */
+  font-weight: bold;
+}
+
+:deep(.el-table__row--striped) {
+  background: #f8f9fa;
+}
+
+:deep(.el-table__cell) {
+  border-right: 1px solid #d0d7e5 !important;
+  border-bottom: 1px solid #d0d7e5 !important;
+}
+
 .review-record {
   padding: 20px;
 }
