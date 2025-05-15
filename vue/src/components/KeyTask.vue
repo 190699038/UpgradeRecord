@@ -20,13 +20,14 @@
     <el-table :data="filteredData" border stripe style="width: 100%; margin-top: 20px" :row-style="handleRowStyle"
       :cell-style="cellStyle" header-cell-class-name="table-header" class="custom-table"  :key="refreshKey">
       <el-table-column prop="id" label="序号" width="120" header-align="center" align="center" border />
-      <el-table-column prop="task_name" label="任务名称" width="200" header-align="center" align="center" border />
-      <el-table-column prop="owner" label="负责人" width="200" header-align="center" align="center" border />
-      <el-table-column prop="conclusion" label="当日结论" border>
+      <el-table-column prop="task_name" label="任务名称" width="220" header-align="center" align="center" border />
+      <el-table-column prop="conclusion" label="当日结论" border >
         <template #default="scope">
           <div style="white-space: pre-line">{{ scope.row.conclusion }}</div>
         </template>
       </el-table-column>
+      <el-table-column prop="owner" label="负责人" width="200" header-align="center" align="center" border />
+
       <el-table-column prop="status" label="状态" header-align="center" width="90" align="center" border />
       <el-table-column prop="period" label="周期" width="100" header-align="center" align="center" border />
       <el-table-column prop="create_date" label="创建日期" width="120" header-align="center" align="center" border />
@@ -361,12 +362,18 @@ const exportToExcel = () => {
 const copyScreenshot = async () => {
   try {
     const originalTable = document.querySelector('.custom-table');
+    const browserWidth = window.innerWidth;
+    console.log('当前浏览器宽度:', browserWidth);
     
     // 克隆整个表格结构
     // 计算前四列总宽度
-    const originalHeaders = Array.from(originalTable.querySelectorAll('th')).slice(0, 4);
-    const totalWidth = originalHeaders.reduce((sum, header) => sum + header.offsetWidth, 0);
-
+    const maxLine = 3
+    const originalHeaders = Array.from(originalTable.querySelectorAll('th')).slice(0, maxLine);
+    let totalWidth = originalHeaders.reduce((sum, header) => sum + header.offsetWidth, 0);
+    // totalWidth = totalWidth * 0.6
+    if(totalWidth > 1110){
+      totalWidth = 1110
+    }
     // 克隆并调整表格结构
     const clonedTable = originalTable.cloneNode(true);
     clonedTable.style.width = `${totalWidth}px`;
@@ -374,7 +381,7 @@ const copyScreenshot = async () => {
     // 保留前四列，删除其他列
     clonedTable.querySelectorAll('tr').forEach(tr => {
       Array.from(tr.children).forEach((td, index) => {
-        if(index >= 4) td.remove();
+        if(index >= maxLine) td.remove();
       });
     });
 
@@ -391,7 +398,7 @@ const copyScreenshot = async () => {
 
     // 同步列宽设置
     clonedTable.querySelectorAll('th, td').forEach((el, index) => {
-      if(index < 4) {
+      if(index < maxLine) {
         el.style.width = `${originalHeaders[index].offsetWidth}px`;
         el.style.minWidth = `${originalHeaders[index].offsetWidth}px`;
         el.style.maxWidth = `${originalHeaders[index].offsetWidth}px`;
