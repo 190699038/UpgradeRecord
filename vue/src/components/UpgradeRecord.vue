@@ -28,6 +28,8 @@
           <div style="white-space: pre-line">{{ scope.row.content }}</div>
         </template>
       </el-table-column>
+
+      <el-table-column prop="impact" label="影响范围" header-align="center" align="center" width="200"/>
       <el-table-column prop="updater" label="研发" header-align="center" align="center" width="100"
         show-overflow-tooltip />
       <el-table-column prop="update_time" label="更新时间" header-align="center" align="center" width="200" />
@@ -82,6 +84,10 @@
         <el-form-item label="升级内容" prop="content">
           <el-input v-model="formData.content" type="textarea" :rows="4" placeholder="请输入升级内容" />
         </el-form-item>
+        <el-form-item label="影响范围" prop="impact">
+          <el-input v-model="formData.impact"  placeholder="请输入影响范围" />
+        </el-form-item>
+        
         <el-form-item label="复盘" prop="platform">
           <el-select v-model="formData.is_review">
             <el-option v-for="platform in is_review_options" :key="platform.value" :label="platform.label"
@@ -186,7 +192,8 @@ const formData = ref({
   tester: [],
   updater: [],
   update_time: '',
-  remark: ''
+  remark: '',
+  impact:''
 })
 const formRules = ref({
   country: [{ required: true, message: '请选择国家', trigger: 'change' }],
@@ -216,15 +223,17 @@ const formRules = ref({
   }]
 })
 const countryOptions = ref([
-  { value: 'US', label: '美国' },
+  { value: 'ALL', label: '所有' },  
+  { value: 'US', label: '美国1' },
   { value: 'US2', label: '美国2' },
-  { value: 'BR', label: '巴西' },
+  { value: 'BR', label: '巴西1' },
   { value: 'BR2', label: '巴西2' },
   { value: 'MX', label: '墨西哥' },
   { value: 'PE', label: '秘鲁' },
   { value: 'CL', label: '智利' },
   { value: 'AU', label: '澳大利亚' },
-  { value: 'PH', label: '菲律宾' }
+  { value: 'PH', label: '菲律宾' },
+  { value: 'OA', label: 'OA' }
 
 ])
 const typeOptions = ref([
@@ -485,8 +494,12 @@ const copyYesterdayContent = async () => {
     filteredData.forEach(record => {
       const countryLabel = countryOptions.value.find(c => c.value === record.country)?.label || record.country;
       const timeString = record.update_time.replace(/-/g, '/');
-      
-      textContent += `${countryLabel}${record.platform}上线 (${timeString}) 更新内容：\n${record.content}\n\n`;
+      let impact = record.impact || '';
+      if (impact !== '') {
+        textContent += `${countryLabel}${record.platform}上线 (${timeString})  影响范围:${record.impact} 更新内容：\n${record.content}\n\n`;
+      }else{
+        textContent += `${countryLabel}${record.platform}上线 (${timeString}) 更新内容：\n${record.content}\n\n`;
+      }
     });
 
     // 浏览器能力检测
@@ -603,6 +616,7 @@ const parseContent = (text) => {
     updateTime: /【上线时间（国内）[^】]*】[：:]\s*(\d{4})(\d{2})(\d{2})\s*(\d{2}[：:]\d{2})/, // 新增的正则表达式模式
     updater: /【开发人员[^】]*】[：:]\s*([^\n]+)/,
     tester: /【测试人员[^】]*】[：:]\s*([^\n]+)/,
+    impact: /【影响范围[^】]*】[：:]\s*([^\n]+)/,
     remark: /【文档地址\/禅道地址】[：:][\s]*([\s\S]*?)(?=\nꔷ |$)/
     }
 
@@ -614,7 +628,9 @@ const parseContent = (text) => {
   // 国家匹配
   formData.value.country = countryOptions.value.find(
     opt => opt.label === extractField(patterns.country, text)
-  )?.value || ''
+  )?.value || extractField(patterns.country, text)
+
+
 
   // 时间格式转换
   const timeMatch = text.match(patterns.updateTime)
@@ -647,6 +663,7 @@ const parseContent = (text) => {
       )
       .filter((v,i,a) => a.indexOf(v) === i) // 去重
   }
+  formData.value.impact = extractField(patterns.impact, text)
 
   // 备注信息
   formData.value.remark = extractField(patterns.remark, text)
