@@ -19,7 +19,13 @@
     </el-select>
     <el-table :data="filteredData" border stripe style="width: 100%; margin-top: 20px" :row-style="handleRowStyle"
       :cell-style="cellStyle" header-cell-class-name="table-header" class="custom-table"  :key="refreshKey">
-      <el-table-column prop="id" label="序号" width="120" header-align="center" align="center" border />
+      <!-- <el-table-column prop="id" label="序号" width="120" header-align="center" align="center" border /> -->
+      <el-table-column  label="序号" width="90" v-if="!isScreenshotting" header-align="center"
+        align="center" border >
+        <template #default="scope">
+          {{ scope.$index + 1 }}
+        </template>
+      </el-table-column>
       <el-table-column prop="task_name" label="任务名称" width="220" header-align="center" align="center" border />
       <el-table-column prop="conclusion" label="当日结论" border >
         <template #default="scope">

@@ -20,7 +20,13 @@
 
     <!-- 数据表格 -->
     <el-table :data="tableData" border class="custom-table">
-      <el-table-column prop="id" label="序号" header-align="center" align="center" width="90" />
+      <!-- <el-table-column prop="id" label="序号" header-align="center" align="center" width="90" /> -->
+      <el-table-column  label="序号" width="90" v-if="!isScreenshotting" header-align="center"
+        align="center" border >
+        <template #default="scope">
+          {{ scope.$index + 1 }}
+        </template>
+      </el-table-column>
       <el-table-column prop="country" label="国家" header-align="center" align="center" width="100"
         :formatter="formatCountry" />
       <el-table-column prop="content" label="升级内容" header-align="center">
@@ -681,8 +687,11 @@ const copyScreenshot = async () => {
     
     // 克隆整个表格结构
     // 计算前四列总宽度
-    const originalHeaders = Array.from(originalTable.querySelectorAll('th')).slice(0, 4);
-    const totalWidth = originalHeaders.reduce((sum, header) => sum + header.offsetWidth, 0);
+    const originalHeaders = Array.from(originalTable.querySelectorAll('th')).slice(0, 3);
+    let totalWidth = originalHeaders.reduce((sum, header) => sum + header.offsetWidth, 0);
+    if(totalWidth > 1100) {
+      totalWidth = 1100
+    }
 
     // 克隆并调整表格结构
     const clonedTable = originalTable.cloneNode(true);
@@ -819,6 +828,7 @@ const copyScreenshot = async () => {
 :deep(.el-table .cell) {
   white-space: pre-wrap;
 }
+
 .custom-table {
   border-collapse: collapse;
   width: 100%;

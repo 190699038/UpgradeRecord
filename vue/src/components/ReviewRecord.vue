@@ -20,6 +20,12 @@
 
     </div>
     <el-table :data="tableData" border class="custom-table">
+      <el-table-column  label="序号" width="90" v-if="!isScreenshotting" header-align="center"
+        align="center" border >
+        <template #default="scope">
+          {{ scope.$index + 1 }}
+        </template>
+      </el-table-column>
       <el-table-column prop="date" label="日期" header-align="center" align="center" width="150" />
       <el-table-column prop="initiator" label="发起人" header-align="center" align="center" width="120" show-overflow-tooltip />
       <el-table-column prop="participants" label="参与人" header-align="center" align="center" width="120" show-overflow-tooltip />
