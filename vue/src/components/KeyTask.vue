@@ -20,7 +20,7 @@
     <el-table :data="filteredData" border stripe style="width: 100%; margin-top: 20px" :row-style="handleRowStyle"
       :cell-style="cellStyle" header-cell-class-name="table-header" class="custom-table"  :key="refreshKey">
       <!-- <el-table-column prop="id" label="序号" width="120" header-align="center" align="center" border /> -->
-      <el-table-column  label="序号" width="90" v-if="!isScreenshotting" header-align="center"
+      <el-table-column  label="序号" width="90" header-align="center"
         align="center" border >
         <template #default="scope">
           {{ scope.$index + 1 }}
@@ -50,11 +50,32 @@
         <el-form-item label="任务名称">
           <el-input v-model="formData.task_name" />
         </el-form-item>
-        <el-form-item label="负责人">
-          <el-input v-model="formData.owner" />
+        <el-form-item label="分类">
+            <el-select v-model="formData.task_fx">
+            <el-option label="关键任务" value="关键任务" />
+            <el-option label="提醒事项" value="提醒事项" />
+          </el-select>
         </el-form-item>
+        <el-form-item label="任务类型">
+            <el-select v-model="formData.task_type">
+            <el-option label="流量" value="流量" />
+            <el-option label="支付" value="支付" />
+            <el-option label="产品" value="产品" />
+            <el-option label="投放" value="投放" />
+            <el-option label="AI" value="AI" />
+            <el-option label="其它" value="其它" />
+          </el-select>
+        </el-form-item>
+
         <el-form-item label="当日结论">
-          <el-input v-model="formData.conclusion" type="textarea" :rows="3" />
+          <div style="width: 100%; height: 300px;">
+            <QuillEditor
+              v-model:content="formData.conclusion"
+              :options="editorOptions"
+              contentType="html"
+              style="height: 100%;"
+            />
+          </div>
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="formData.status">
@@ -63,6 +84,9 @@
             <el-option label="已暂停" value="已暂停" />
           </el-select>
         </el-form-item>
+        <el-form-item label="负责人">
+          <el-input v-model="formData.owner" />
+        </el-form-item>       
         <el-form-item label="周期">
           <el-select v-model="formData.period" placeholder="请选择周" style="margin-left: 8px; width: 240px">
             <el-option v-for="week in weekOptionsNew" :key="week.value" :label="week.label" :value="week.value" />
@@ -71,9 +95,9 @@
         <el-form-item label="创建日期">
           <el-date-picker v-model="formData.create_date" type="date" value-format="YYYYMMDD" style="width: 240px" />
         </el-form-item>
-        <el-form-item label="备注">
+        <!-- <el-form-item label="备注">
           <el-input v-model="formData.remark" />
-        </el-form-item>
+        </el-form-item> -->
       </el-form>
 
       <template #footer>
@@ -102,8 +126,24 @@ const formData = ref({
   conclusion: '0',
   status: 1,
   period: '',
-  create_date: ''
+  create_date: '',
+  task_type: '',
+  task_fx: '',
 })
+const editorOptions = ref({
+  modules: {
+    toolbar: [
+      ['bold', 'italic', 'underline'],
+      [{ 'color': [] }, { 'background': [] }],
+      ['blockquote', 'code-block'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['link', 'image']
+    ]
+  },
+  theme: 'snow'
+})
+
+
 const refreshKey = ref(0)
 
 const dialogTitle = computed(() => {
@@ -208,6 +248,8 @@ const openDialog = (type, row) => {
       owner: '',
       conclusion: '',
       status: '2',
+      task_type: '其它',
+      task_fx:'提醒事项',
       period: weekOptionsNew.value[1].value,
       create_date: new Date().toISOString().slice(0, 10).replace(/-/g, '')
     }
@@ -488,6 +530,10 @@ const copyScreenshot = async () => {
 
 }
 </style>
+
+
+
+
 
 
 
