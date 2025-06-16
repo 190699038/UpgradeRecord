@@ -26,17 +26,20 @@
           {{ scope.$index + 1 }}
         </template>
       </el-table-column>
-      <el-table-column prop="task_name" label="任务名称" width="220" header-align="center" align="center" border />
-      <el-table-column prop="conclusion" label="当日结论" border >
+      <el-table-column prop="task_name" label="目标" width="220" header-align="center" align="center" border />
+      <el-table-column prop="task_fx" label="方向" width="220" header-align="center" align="center" border />
+      <el-table-column prop="task_type" label="类型" width="220" header-align="center" align="center" border />
+
+      <el-table-column prop="conclusion" label="当日结论">
         <template #default="scope">
-          <div style="white-space: pre-line">{{ scope.row.conclusion }}</div>
+          <div v-html="scope.row.conclusion" style="max-height: 100px; overflow: auto;"></div>
         </template>
       </el-table-column>
       <el-table-column prop="owner" label="负责人" width="200" header-align="center" align="center" border />
 
-      <el-table-column prop="status" label="状态" header-align="center" width="90" align="center" border />
+      <!-- <el-table-column prop="status" label="状态" header-align="center" width="90" align="center" border /> -->
       <el-table-column prop="period" label="周期" width="100" header-align="center" align="center" border />
-      <el-table-column prop="create_date" label="创建日期" width="120" header-align="center" align="center" border />
+      <!-- <el-table-column prop="create_date" label="创建日期" width="120" header-align="center" align="center" border /> -->
       <el-table-column label="操作" width="150" header-align="center" align="center" border>
         <template #default="scope">
           <el-button size="small" @click="openDialog('edit', scope.row)">编辑</el-button>
