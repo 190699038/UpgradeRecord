@@ -7,7 +7,7 @@
       class="nav-menu"
     >
     <el-menu-item index="/key-tasks">关键任务</el-menu-item>
-    <el-menu-item index="/daily-reminders">每日提醒</el-menu-item>
+    <!-- <el-menu-item index="/daily-reminders">每日提醒</el-menu-item> -->
 
       <el-menu-item index="/upgrade-record">升级记录</el-menu-item>
       <el-menu-item index="/review-record">总办复盘记录</el-menu-item>

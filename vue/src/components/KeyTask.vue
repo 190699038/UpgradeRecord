@@ -17,24 +17,25 @@
       <el-option label="进行中" value="进行中" />
       <el-option label="已暂停" value="已暂停" />
     </el-select>
-    <el-table :data="filteredData" border stripe style="width: 100%; margin-top: 20px" :row-style="handleRowStyle"
+    <div class="talbe-container">
+      <el-table :data="filteredData" border stripe style="margin-top: 20px;width: auto;" :row-style="handleRowStyle"
       :cell-style="cellStyle" header-cell-class-name="table-header" class="custom-table"  :key="refreshKey">
-      <!-- <el-table-column prop="id" label="序号" width="120" header-align="center" align="center" border /> -->
       <el-table-column  label="序号" width="90" header-align="center"
         align="center" border >
         <template #default="scope">
           {{ scope.$index + 1 }}
         </template>
       </el-table-column>
-      <el-table-column prop="task_name" label="目标" width="220" header-align="center" align="center" border />
+      <!-- <el-table-column prop="task_name" label="目标" width="220" header-align="center" align="center" border /> -->
+   
+      <el-table-column prop="conclusion" label="当日结论" width="800">
+        <template #default="scope">
+          <div v-html="scope.row.conclusion" style="min-height: 40px;line-height: 15px;"></div>
+        </template>
+      </el-table-column>
       <el-table-column prop="task_fx" label="方向" width="220" header-align="center" align="center" border />
       <el-table-column prop="task_type" label="类型" width="220" header-align="center" align="center" border />
 
-      <el-table-column prop="conclusion" label="当日结论">
-        <template #default="scope">
-          <div v-html="scope.row.conclusion" style="max-height: 100px; overflow: auto;"></div>
-        </template>
-      </el-table-column>
       <el-table-column prop="owner" label="负责人" width="200" header-align="center" align="center" border />
 
       <!-- <el-table-column prop="status" label="状态" header-align="center" width="90" align="center" border /> -->
@@ -47,6 +48,9 @@
         </template>
       </el-table-column>
     </el-table>
+
+    </div>
+  
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle">
       <el-form :model="formData" label-width="100px">
@@ -418,13 +422,13 @@ const copyScreenshot = async () => {
     
     // 克隆整个表格结构
     // 计算前四列总宽度
-    const maxLine = 3
+    const maxLine =2
     const originalHeaders = Array.from(originalTable.querySelectorAll('th')).slice(0, maxLine);
     let totalWidth = originalHeaders.reduce((sum, header) => sum + header.offsetWidth, 0);
     // totalWidth = totalWidth * 0.6
-    if(totalWidth > 1110){
-      totalWidth = 1110
-    }
+    // if(totalWidth > 1110){
+    //   totalWidth = 1110
+    // }
     // 克隆并调整表格结构
     const clonedTable = originalTable.cloneNode(true);
     clonedTable.style.width = `${totalWidth}px`;
@@ -483,6 +487,16 @@ const copyScreenshot = async () => {
   border-radius: 4px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
 
+.talbe-container{
+  overflow: auto;
+  width: 100%;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+  
   :deep(.custom-table) {
     th.table-header {
       background: #1890ff;

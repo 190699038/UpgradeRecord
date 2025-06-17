@@ -26,9 +26,9 @@ export const exportTaskToExcel = (data, title) => {
   
 
   // 表头
-  const headerRow = worksheet.addRow(['序号', '任务名称', '负责人', '当日结论']);
+  const headerRow = worksheet.addRow(['序号', '当日结论']);
   // 仅在前四列应用样式
-  ['A2', 'B2', 'C2', 'D2'].forEach(cellAddress => {
+  ['A2', 'B2'].forEach(cellAddress => {
     const cell = worksheet.getCell(cellAddress);
     cell.font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
     cell.fill = {
@@ -43,8 +43,6 @@ export const exportTaskToExcel = (data, title) => {
   data.forEach((item, index) => {
     const row = worksheet.addRow([
       item.id,
-      item.task_name,
-      item.owner,
       item.conclusion
     ]);
 
@@ -88,9 +86,7 @@ export const exportTaskToExcel = (data, title) => {
   // 设置行高和列宽
   worksheet.columns = [
     { width: 15 }, // 序号
-    { width: 35 }, // 任务名称
-    { width: 20 }, // 负责人
-    { width: 108 }  // 当日结论
+    { width: 500 }  // 当日结论
   ];
 
   worksheet.eachRow(row => {
