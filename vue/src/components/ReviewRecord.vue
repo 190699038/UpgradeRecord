@@ -20,7 +20,7 @@
 
     </div>
     <el-table :data="tableData" border class="custom-table">
-      <el-table-column  label="序号" width="90" v-if="!isScreenshotting" header-align="center"
+      <el-table-column  label="序号" width="90" header-align="center"
         align="center" border >
         <template #default="scope">
           {{ scope.$index + 1 }}

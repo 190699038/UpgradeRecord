@@ -41,9 +41,11 @@ export const exportTaskToExcel = (data, title) => {
 
   // 数据行
   data.forEach((item, index) => {
+    let content = item.conclusion.replace('</', '\n\t</') 
+    let conclusion = content ? new DOMParser().parseFromString(content, 'text/html').body.textContent || '' : ''
     const row = worksheet.addRow([
       item.id,
-      item.conclusion
+      conclusion
     ]);
 
     // 交替行颜色
