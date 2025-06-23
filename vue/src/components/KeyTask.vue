@@ -17,8 +17,19 @@
       <el-option label="进行中" value="进行中" />
       <el-option label="已暂停" value="已暂停" />
     </el-select>
+
+    <el-select
+      v-model="selectedTypeFX"
+      placeholder="状态筛选"
+      style="margin-left: 8px; width: 240px">
+      <el-option label="全部" value="" />
+      <el-option label="关键任务" value="关键任务" />
+      <el-option label="提醒事项" value="提醒事项" />
+    </el-select>
+    <el-button type="primary" @click="loadData">查询</el-button>
+
     <div class="talbe-container">
-      <el-table :data="filteredData" border stripe style="margin-top: 20px;width: auto;" :row-style="handleRowStyle"
+      <el-table :data="tableData" border stripe style="margin-top: 20px;width: auto;" :row-style="handleRowStyle"
       :cell-style="cellStyle" header-cell-class-name="table-header" class="custom-table"  :key="refreshKey">
       <el-table-column  label="序号" width="90" header-align="center"
         align="center" border >
@@ -159,15 +170,16 @@ const dialogTitle = computed(() => {
 
 // 新增响应式变量
 const selectedStatus = ref('')
+const selectedTypeFX = ref('')
 
 // 更新过滤逻辑
-const filteredData = computed(() => {
-  return tableData.value.filter(item => {
-    const weekMatch = item.period === selectedWeek.value
-    const statusMatch = !selectedStatus.value || item.status === selectedStatus.value
-    return weekMatch && statusMatch
-  })
-})
+// const filteredData = computed(() => {
+//   return tableData.value.filter(item => {
+//     const weekMatch = item.period === selectedWeek.value
+//     const statusMatch = !selectedStatus.value || item.status === selectedStatus.value
+//     return weekMatch && statusMatch
+//   })
+// })
 const formatPriority = (row) => {
   const map = { '3': '高', '2': '中', '1': '低' }
   return map[row.priority] || '-'
@@ -235,7 +247,9 @@ const weekOptionsNew = computed(() => {
 const loadData = async () => {
   try {
     const response = await api.post('/api.php?table=key_tasks&action=list', {
-      period: selectedWeek.value
+      period: selectedWeek.value,
+      type_fx: selectedTypeFX.value,
+      status: selectedStatus.value,
     })
     refreshKey.value++ // 触发重新渲染
     tableData.value = response.data.data
