@@ -8,7 +8,7 @@
       :cell-style="{ padding: '0px 0' }"
       :header-cell-style="getHeaderClassName"
     >
-    <el-table-column label="ID"  align="center" width="48" prop="id"/>
+    <el-table-column label="ID"  align="center" width="48" prop="id" header-align="center"/>
 
       <!-- 新增合并表头 -->
       <el-table-column label="需求概述（产品组填写）"  header-align="center">
@@ -64,7 +64,7 @@
     </el-table-column>
 
     <!-- 分组5 -->
-    <el-table-column label="姜宇晨" prop="retrospective_document" width="120" header-align="center">
+    <el-table-column v-if="columnsVisibility.retrospective" label="姜宇晨" prop="retrospective_document" width="120" header-align="center">
         <el-table-column label="复盘文档" header-align="center">
         <template #default="scope">
           <a v-if="scope.row.retrospective_document" :href="scope.row.retrospective_document" target="_blank" rel="noopener" :title="scope.row.retrospective_document">{{ scope.row.retrospective_document }}</a>
@@ -92,6 +92,16 @@
         </template>
       </el-table-column>
     </el-table>
+
+<div class="toggle-container">
+  <el-switch
+    v-model="columnsVisibility.retrospective" @change="handleToggleChange"
+    active-text="显示复盘列"
+    inactive-text="隐藏复盘列"
+    active-color="#13ce66"
+    inactive-color="#ff4949">
+  </el-switch>
+</div>
   </div>
 </template>
 
@@ -101,6 +111,16 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '@/utils/api.js';
 import { exportTaskToExcel } from '@/utils/excelExporter';
 import html2canvas from 'html2canvas';
+
+const columnsVisibility = ref({ retrospective: true });
+const toggleDebounce = ref(null);
+
+const handleToggleChange = (val) => {
+  clearTimeout(toggleDebounce.value);
+  toggleDebounce.value = setTimeout(() => {
+    columnsVisibility.value.retrospective = val;
+  }, 300);
+};
 
 const tableData = ref([
   {
@@ -130,49 +150,36 @@ const tableData = ref([
 
 
 const getHeaderClassName = (obj) =>{
-    // console.log(obj)
     let rowIndex = obj.rowIndex
     let columnIndex = obj.columnIndex
+    let item = obj.row[columnIndex]
+    console.log(item.label)
+    let label = item.label
 
-    if(rowIndex == 0){
-        if(columnIndex == 1){
-            return { padding: '0 0',background:'#BF900A' , color:'white',height:'36px'} 
-        }else if(columnIndex == 2){
-             return { padding: '0 0',background:'#409EFF', color:'white' ,height:'36px'}
-        }
-        else if(columnIndex == 3){
-             return { padding: '0 0',background:'#558036' , color:'white',height:'36px'}
-        }
-        else if(columnIndex == 4 ){
-             return { padding: '0 0',background:'#C65A14', color:'white' ,height:'36px'}
-        }
-        else if(columnIndex == 5){
-             return { padding: '0 0',background:'#3F3F3F' , color:'white',height:'36px'}
-        }
+    if( label == '需求概述（产品组填写）' || label == '需求名称' || label == '目标' || label == '内容'){
+        return { padding: '0 0',background:'#BF900A' , color:'white',height:'36px'} 
+    }else if(label == '相关信息（产品组填写）' || label == '项目' || label == '优先级'|| label == '来源'|| label == '负责人'|| label == '进度'|| label == '评审表'|| label == '需求文档'|| label == '会议时间'|| label == '参会人员'|| label == '计划上线'){
+        return { padding: '0 0',background:'#409EFF', color:'white' ,height:'36px'}
+    }else if(label == '时间（叶积建填写）' || label == '开发时间' || label == '提测时间' || label == '上线时间'){
+        return { padding: '0 0',background:'#558036' , color:'white',height:'36px'}
+    }else if(label == '姜宇晨' || label == '复盘文档' ){
+        return { padding: '0 0',background:'#C65A14', color:'white' ,height:'36px'}
+    }else if(label == '考核相关（用人组填写）' || label == '上线效果/环评结果' || label == '需求会评分'){
+         return { padding: '0 0',background:'#3F3F3F' , color:'white',height:'36px'}
     }
-    else if(rowIndex == 1){
-        if(columnIndex >= 0 && columnIndex < 3){
-            return { padding: '0 0',background:'#BF900A' , color:'white',height:'36px'} 
-        }else if(columnIndex >= 3 && columnIndex < 13){
-             return { padding: '0 0',background:'#409EFF', color:'white' ,height:'36px'}
-        }
-        else if(columnIndex >= 13 && columnIndex < 16){
-             return { padding: '0 0',background:'#558036' , color:'white',height:'36px'}
-        }
-        else if(columnIndex == 16 ){
-             return { padding: '0 0',background:'#C65A14', color:'white' ,height:'36px'}
-        }
-        else if(columnIndex >= 17 && columnIndex < 19 ){
-             return { padding: '0 0',background:'#3F3F3F' , color:'white',height:'36px'}
-        }
-    }
-    
-    return { padding: '0 0',background:'' }
+    return { padding: '0 0',background:'#B0C4DE' }
 }
 
 </script>
 
 <style scoped>
+.toggle-container {
+  margin: 12px 0;
+  padding: 8px;
+  background: #f5f7fa;
+  border-radius: 4px;
+}
+
 .crud-container {
   height: 100vh;
   overflow-y: auto;
