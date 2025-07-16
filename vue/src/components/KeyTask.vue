@@ -1,5 +1,5 @@
 <template>
-  <div class="crud-container">
+  <div class="crud-container" ref="pageContainer">
     <el-button type="primary" @click="openDialog('create')">新建关键任务</el-button>
     <el-button type="primary" @click="copyKeyTasks" style="margin-left: 8px">复制任务内容</el-button>
     <!-- <el-button type="primary" @click="copyTableContent" style="margin-left: 8px">复制表格内容</el-button> -->
@@ -28,7 +28,7 @@
     </el-select>
     <el-button type="primary" @click="loadData">查询</el-button>
 
-    <div class="talbe-container">
+    <div class="talbe-container" ref="tableContainer">
       <el-table :data="tableData" border stripe style="margin-top: 20px;width: auto;" :row-style="handleRowStyle"
       :cell-style="cellStyle" header-cell-class-name="table-header" class="custom-table"  :key="refreshKey">
       <el-table-column  label="序号" width="90" header-align="center"
@@ -86,12 +86,11 @@
         </el-form-item>
 
         <el-form-item label="当日结论">
-          <div style="width: 100%; height: 300px;">
+          <div style="width: 100%; height: auto;">
             <QuillEditor
               v-model:content="formData.conclusion"
               :options="editorOptions"
               contentType="html"
-              style="height: 100%;"
             />
           </div>
         </el-form-item>
@@ -127,7 +126,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
+import { ref, onMounted, computed, nextTick } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus'
 // import { getKeyTasks, createKeyTask, updateKeyTask, deleteKeyTask } from '@/utils/api'
 import api from '@/utils/api.js';
@@ -163,6 +162,11 @@ const editorOptions = ref({
 
 
 const refreshKey = ref(0)
+// 新增滚动位置ref
+const tableContainer = ref(null);
+const pageContainer = ref(null)
+const savedScrollTop = ref(0);
+const savedPageTop = ref(0);
 
 const dialogTitle = computed(() => {
   return dialogType.value === 'create' ? '新增记录' : '编辑记录'
@@ -253,6 +257,16 @@ const loadData = async () => {
     })
     refreshKey.value++ // 触发重新渲染
     tableData.value = response.data.data
+     setTimeout(() => {
+      if (tableContainer.value) {
+        tableContainer.value.scrollTop = savedScrollTop.value;
+      }
+
+      if(pageContainer.value){
+        pageContainer.value.scrollTop = savedPageTop.value
+      }
+    },100);
+
   } catch (error) {
     ElMessage.error('获取数据失败')
   }
@@ -260,6 +274,9 @@ const loadData = async () => {
 
 const openDialog = (type, row) => {
   dialogType.value = type
+  savedScrollTop.value = tableContainer.value.scrollTop;
+  savedPageTop.value = pageContainer.value.scrollTop
+  console.log(pageContainer.value.scrollTop)
   if (type === 'edit') {
     formData.value = { ...row }
   } else {
@@ -508,6 +525,7 @@ const copyScreenshot = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow-y: auto;
 }
 
   

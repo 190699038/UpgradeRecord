@@ -5,6 +5,7 @@ import ReviewRecord from '@/components/ReviewRecord.vue'
 import UserManagement from '@/components/UserManagement.vue'
 import DailyReminder from '@/components/DailyReminder.vue'
 import KeyTask from '@/components/KeyTask.vue'
+import ProductRecord from '@/components/ProductRecord.vue'
 
 export default createRouter({
   history: createWebHashHistory(),
@@ -14,6 +15,8 @@ export default createRouter({
       component: MainLayout,
       children: [
         { path: 'upgrade-record', component: UpgradeRecord },
+        { path: 'product-record', component: ProductRecord },
+
         { path: 'review-record', component: ReviewRecord },
         { path: 'user-management', component: UserManagement },
         { path: 'daily-reminders', component: DailyReminder },

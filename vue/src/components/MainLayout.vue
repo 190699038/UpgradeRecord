@@ -1,15 +1,11 @@
 <template>
   <div class="main-layout">
-    <el-menu
-      :default-active="activeIndex"
-      mode="horizontal"
-      router
-      class="nav-menu"
-    >
-    <el-menu-item index="/key-tasks">关键任务</el-menu-item>
-    <!-- <el-menu-item index="/daily-reminders">每日提醒</el-menu-item> -->
+    <el-menu :default-active="activeIndex" mode="horizontal" router class="nav-menu">
+      <el-menu-item index="/key-tasks">关键任务</el-menu-item>
+      <el-menu-item index="/product-record">产品需求记录</el-menu-item>
 
       <el-menu-item index="/upgrade-record">升级记录</el-menu-item>
+
       <el-menu-item index="/review-record">总办复盘记录</el-menu-item>
       <el-menu-item index="/user-management">用户管理</el-menu-item>
     </el-menu>
@@ -25,7 +21,7 @@ const route = useRoute()
 const activeIndex = route.path
 
 onMounted(async () => {
- 
+
 })
 </script>
 
@@ -35,12 +31,14 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
 }
+
 .nav-menu {
   flex-shrink: 0;
 }
+
 .content-container {
   flex: 1;
-  padding: 20px;
+  padding: 1px;
   overflow: auto;
 }
 </style>
