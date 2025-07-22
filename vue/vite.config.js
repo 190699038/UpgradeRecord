@@ -22,11 +22,14 @@ export default defineConfig({
 
     proxy: {
       '/DailyReview/server': {
-        // target: 'http://127.0.0.1/DailyReview/server',
-        // target: 'http://10.10.10.95/DailyReview/server',
-
         changeOrigin: true,
-        // rewrite: (path) => path.replace(/^\/server/, '')
+      },
+      '/api': {
+        target: 'https://api.dingtalk.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        secure: false, // 开发环境可以忽略HTTPS证书验证
+        ws: true // 如果需要代理WebSocket
       }
     }
   }

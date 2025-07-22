@@ -2,7 +2,7 @@
   <div class="main-layout">
     <el-menu :default-active="activeIndex" mode="horizontal" router class="nav-menu">
       <el-menu-item index="/key-tasks">关键任务</el-menu-item>
-      <el-menu-item index="/product-record">产品需求记录</el-menu-item>
+      <!-- <el-menu-item index="/product-record">产品需求记录</el-menu-item> -->
 
       <el-menu-item index="/upgrade-record">升级记录</el-menu-item>
 
