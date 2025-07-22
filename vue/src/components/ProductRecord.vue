@@ -123,7 +123,7 @@ import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import api from '@/utils/api.js';
 import { exportTaskToExcel } from '@/utils/excelExporter';
 import html2canvas from 'html2canvas';
-import docClient from '@/utils/DingTalkDocClient'
+// import docClient from '@/utils/DingTalkDocClient'
 
 
 onMounted(() => {
@@ -296,14 +296,14 @@ const getHeaderClassName = (obj) => {
 
 
 async function fetchDingTalkDoc(docId) {
-  try {
-    const content = await docClient.getDocContent(docId);
-    console.log('文档内容:', content);
-    return content;
-  } catch (error) {
-    console.error('获取文档失败:', error.message);
-    throw error;
-  }
+//   try {
+//     const content = await docClient.getDocContent(docId);
+//     console.log('文档内容:', content);
+//     return content;
+//   } catch (error) {
+//     console.error('获取文档失败:', error.message);
+//     throw error;
+//   }
 }
 
 </script>

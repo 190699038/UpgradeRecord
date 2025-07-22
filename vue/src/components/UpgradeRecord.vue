@@ -646,6 +646,35 @@ const parseContent = (text) => {
     formData.value.update_time  = formData.value.update_time.replace(/：/g, ":")
   }
 
+  if(formData.value.updateTime == null || formData.value.updateTime == ''){
+    const timePattern = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/;
+    const matchResult = text.match(timePattern);
+    if(matchResult != null){
+      formData.value.update_time = matchResult[0];
+    }
+    
+  }
+
+  if(formData.value.updateTime == null || formData.value.updateTime == ''){
+    // 匹配日期和时间部分，兼容多个空格和中文冒号
+    const domesticTimePattern = /【上线时间（国内）】\s*[:：]\s*(\d{4}-\d{2}-\d{2})\s*(\d{1,2}[:：]\d{1,2}(?:[:：]\d{1,2})?)/i;
+
+    // 执行匹配
+    const matchResult = text.match(domesticTimePattern);
+
+    if (matchResult) {
+        // 提取日期部分并替换可能的中文冒号为英文冒号
+        const datePart = matchResult[1];
+        const timePart = matchResult[2].replace('：', ':');
+        
+        // 补全秒数部分
+        formData.value.update_time = `${datePart} ${timePart}:00`;
+        
+    }
+    
+  }
+
+
   // 开发人员模糊匹配
   const devNames = extractField(patterns.updater, text).split(/[、,]/)
   if (devNames.length) {
