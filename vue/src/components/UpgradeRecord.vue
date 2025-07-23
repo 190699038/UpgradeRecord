@@ -646,7 +646,7 @@ const parseContent = (text) => {
     formData.value.update_time  = formData.value.update_time.replace(/：/g, ":")
   }
 
-  if(formData.value.updateTime == null || formData.value.updateTime == ''){
+  if(formData.value.update_time == null || formData.value.update_time == ''){
     const timePattern = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/;
     const matchResult = text.match(timePattern);
     if(matchResult != null){
@@ -655,7 +655,7 @@ const parseContent = (text) => {
     
   }
 
-  if(formData.value.updateTime == null || formData.value.updateTime == ''){
+  if(formData.value.update_time == null || formData.value.update_time == ''){
     // 匹配日期和时间部分，兼容多个空格和中文冒号
     const domesticTimePattern = /【上线时间（国内）】\s*[:：]\s*(\d{4}-\d{2}-\d{2})\s*(\d{1,2}[:：]\d{1,2}(?:[:：]\d{1,2})?)/i;
 
@@ -681,7 +681,7 @@ const parseContent = (text) => {
     formData.value.updater = devNames
       .flatMap(name => 
         develops.value
-          .filter(dev => dev.username.toLowerCase().includes(name.trim().toLowerCase()))
+          .filter(dev => name.length > 0 && dev.username.toLowerCase().includes(name.trim().toLowerCase()))
           .map(dev => dev.username)
       )
       .filter((v,i,a) => a.indexOf(v) === i) // 去重
@@ -693,7 +693,7 @@ const parseContent = (text) => {
     formData.value.tester = testerNames
       .flatMap(name =>
         testers.value
-          .filter(t => t.username.toLowerCase().includes(name.trim().toLowerCase()))
+          .filter(t => name.length > 0 && t.username.toLowerCase().includes(name.trim().toLowerCase()))
           .map(t => t.username)
       )
       .filter((v,i,a) => a.indexOf(v) === i) // 去重
