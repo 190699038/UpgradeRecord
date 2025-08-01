@@ -85,7 +85,7 @@ try {
   // 更新数据库
   // $stmt = $pdo->prepare("UPDATE records SET image_path = ? WHERE id = ?");
   // $stmt->execute([$filePath, $recordId]);
-  $url = "http://10.10.10.95/Record/server/upload/";
+  $url = "https://record.gameyzy.com/record/server/upload/";
   if($type == 'update'){
     $url .= 'update/'; 
   }else if($type == 'review'){

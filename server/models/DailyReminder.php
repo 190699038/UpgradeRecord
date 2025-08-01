@@ -73,4 +73,9 @@ class DailyReminder extends BaseModel
         return $this->returnResult($query);
 
     }
+    
+    public function product_record($data){
+        
+    }    
+    
 }

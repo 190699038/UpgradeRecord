@@ -6,7 +6,7 @@ class UpgradeRecord extends BaseModel {
     protected $fields = ['country', 'content', 'update_time', 'updater', 'tester', 'type', 'platform', 'review_conclusion', 'remark','is_review'];
 
     public function create($data) {
-        $sql = "INSERT INTO {$this->table} (country, content, update_time, updater, tester, type, platform, review_conclusion,is_review, remark) VALUES (?, ?, ?, ?,?, ?, ?, ?,?,?)";
+        $sql = "INSERT INTO {$this->table} (country, content, update_time, updater, tester, type, platform, review_conclusion,is_review, impact,remark) VALUES (?, ?, ?, ?,?, ?, ?, ?,?,?,?)";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
             $data['country'],
@@ -16,8 +16,10 @@ class UpgradeRecord extends BaseModel {
             $data['tester'],
             $data['type'],
             $data['platform'],
-            $data['review_conclusion'],
+            '',
+            // $data['review_conclusion'],
             $data['is_review'],
+            $data['impact'],
             $data['remark']
         ]);
         $obj = $this->db->lastInsertId();
@@ -27,7 +29,7 @@ class UpgradeRecord extends BaseModel {
     }
 
     public function update($id, $data) {
-        $sql = "UPDATE {$this->table} SET country=?, content=?, update_time=?, updater=? , tester=? , type=? , platform=? , review_conclusion=? , remark=?,is_review=? WHERE id=?";
+        $sql = "UPDATE {$this->table} SET country=?, content=?, update_time=?, updater=? , tester=? , type=? , platform=? , review_conclusion=? , remark=?,is_review=? ,impact=? WHERE id=?";
         $stmt = $this->db->prepare($sql);
         $obj = $stmt->execute([
             $data['country'],
@@ -40,6 +42,7 @@ class UpgradeRecord extends BaseModel {
             $data['review_conclusion'],
             $data['remark'],
             $data['is_review'],
+            $data['impact'],
             $id
         ]);
 
@@ -59,7 +62,7 @@ class UpgradeRecord extends BaseModel {
         $where = [];
         $params = [];
 
-        if (!empty($data['country'])) {
+        if (!empty($data['country']) && $data['country'] != "ALL") {
             $where[] = 'country = ?';
             $params[] = $data['country'];
         }

@@ -238,6 +238,8 @@ const countryOptions = ref([
   { value: 'PE', label: '秘鲁' },
   { value: 'CL', label: '智利' },
   { value: 'AU', label: '澳大利亚' },
+  { value: 'CA', label: '加拿大' },
+
   { value: 'PH', label: '菲律宾' },
   { value: 'OA', label: 'OA' }
 

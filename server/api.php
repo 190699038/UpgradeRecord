@@ -57,6 +57,12 @@ try {
         case 'delete':
             echo json_encode($model->delete($id));
             break;
+        case 'sendDingTalkText':
+            echo json_encode($model->sendDingTalkText($data));
+            break;
+        case 'product_record':
+            echo json_encode($model->sendDingTalkText($data));
+            break;
         default:
             echo json_encode($model->getAll());
     }
