@@ -21,7 +21,7 @@ export default createRouter({
         { path: 'user-management', component: UserManagement },
         { path: 'daily-reminders', component: DailyReminder },
         { path: 'key-tasks', component: KeyTask },
-        { path: '', redirect: 'key-tasks' }
+        { path: '', redirect: 'upgrade-record' }
       ]
     }
   ]

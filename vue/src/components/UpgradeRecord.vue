@@ -649,10 +649,16 @@ const parseContent = (text) => {
   }
 
   if(formData.value.update_time == null || formData.value.update_time == ''){
-    const timePattern = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/;
+    const timePattern = /【上线时间（国内）】\s*[:：]\s*(\d{4}-\d{2}-\d{2})\s*(\d{1,2}[:：]\d{1,2}(?:[:：]\d{1,2})?)/i;
     const matchResult = text.match(timePattern);
     if(matchResult != null){
-      formData.value.update_time = matchResult[0];
+      const datePart = matchResult[1];
+      let timePart = matchResult[2].replace(/：/g, ':');
+      // 如果时间部分没有秒数，则补全秒数
+      if(timePart.split(':').length === 2) {
+        timePart += ':00';
+      }
+      formData.value.update_time = `${datePart} ${timePart}`;
     }
     
   }
