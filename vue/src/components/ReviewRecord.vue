@@ -17,6 +17,7 @@
       />
       <el-button type="primary" @click="fetchRecords">查询</el-button>
       <el-button type="primary" @click="copyScreenshot" style="margin-left: 8px">复制截图</el-button>
+      <el-button type="success" @click="exportToExcel" style="margin-left: 8px">导出Excel</el-button>
 
     </div>
     <el-table :data="tableData" border class="custom-table">
@@ -35,6 +36,18 @@
           <div style="white-space: pre-line">{{ scope.row.content }}</div>
         </template>
       </el-table-column>
+      <!-- <el-table-column prop="around_goal" label="围绕目标" header-align="center" width="200"  /> -->
+      <el-table-column prop="next_step" label="下一步" header-align="center"  width="200" />
+      <el-table-column prop="valuable" label="有价值" header-align="center" align="center" width="90" >
+        <template #default="{ row }">
+          <span :style="{ color: (row.valuable == 1) ? '#67C23A' : (row.valuable == 0) ? '#F56C6C' : '#909399' }">
+            {{ (row.valuable == 1) ? '有价值' : (row.valuable == 0) ? '无价值' : '常规会议' }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="value_content" label="价值体现" header-align="center" align="center" width="200" />
+
+
       <el-table-column label="操作" width="150" header-align="center" align="center">
         <template #default="scope">
           <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
@@ -43,7 +56,7 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="dialogVisible" :title="dialogType === 'edit' ? '编辑记录' : '新增记录'" style="width: 80%;height: 75%;">
+    <el-dialog v-model="dialogVisible" :title="dialogType === 'edit' ? '编辑记录' : '新增记录'" width="90%" style="max-height: 90vh;">
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="80px" style="width: 90%; height: 100%;">
         <el-form-item label="日期">
           <el-date-picker
@@ -52,33 +65,50 @@
             value-format="YYYYMMDD"
           />
         </el-form-item>
-        <!-- <el-form-item label="目的">
-          <el-input v-model="formData.purpose"/>
-        </el-form-item>
-        <el-form-item label="参会人">
-          <el-select v-model="formData.initiator" multiple filterable placeholder="请选择参会人">
-          <el-option v-for="user in users" :key="user.id" :label="user.username" :value="user.username" />
-        </el-select>
-        </el-form-item>
-        <el-form-item label="参与人">
-          <el-select v-model="formData.participants" multiple filterable placeholder="请选择参与人">
-          <el-option v-for="user in users" :key="user.id" :label="user.username" :value="user.username" />
-        </el-select> -->
-        <!-- </el-form-item> -->
-        <!-- <el-form-item label="结论">
-          <el-input v-model="formData.conclusion" type="textarea" rows="8"/>
-        </el-form-item> -->
+       
         <el-form-item label="结论">
           <div style="width: 100%; height: 100%; display: flex; flex-direction: column; flex: 1;">
             <QuillEditor 
               v-model:content="conclusion"
               :options="editorOptions"
               contentType="html"
-              style="height: 55vh;width: 110%;"
+              style="height: 35vh;width: 110%;"
               ref="myQuillEditor"
               @ready="handleEditorReady"
             />
           </div>
+        </el-form-item>
+         <!-- <el-form-item label="围绕目标">
+          <el-input
+            v-model="formData.around_goal"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入围绕目标"
+          />
+        </el-form-item> -->
+
+        <el-form-item label="价值">
+          <el-radio-group v-model="formData.valuable">
+            <el-radio :label="1">有价值</el-radio>
+            <el-radio :label="0">无价值</el-radio>
+            <el-radio :label="2">常规会议</el-radio>
+          </el-radio-group>
+        </el-form-item>
+                <el-form-item label="下一步">
+          <el-input
+            v-model="formData.next_step"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入下一步计划"
+          />
+        </el-form-item>
+        <el-form-item label="价值体现">
+          <el-input
+            v-model="formData.value_content"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入价值体现内容"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -98,6 +128,7 @@ import html2canvas from 'html2canvas';
 
 import api from '../utils/api'
 import { id } from 'element-plus/es/locales.mjs';
+import ExcelJS from 'exceljs';
 const editorInstance = ref(null)
 
 const tableData = ref([])
@@ -141,7 +172,11 @@ const formData = ref({
   purpose: '',
   initiator: [],
   participants: [],
-  conclusion: ''
+  conclusion: '',
+  around_goal:'',
+  next_step:'',
+  valuable:2,
+  value_content:''
 })
 
 const getUsers = async () => {
@@ -252,6 +287,18 @@ const submitForm = async () => {
 
     formData.value.content = ctent
     formData.value.conclusion = content
+    if(formData.value.next_step == null){
+      formData.value.next_step  = ''
+    }
+
+    if(formData.value.value_content == null){
+      formData.value.value_content  = ''
+    }
+
+    if(formData.value.around_goal == null){
+      formData.value.around_goal  = ''
+    }
+
 
     const payload = {
       ...formData.value,
@@ -382,6 +429,121 @@ const insertImageToEditor = (url) => {
   const quill = myQuillEditor.value.getQuill(); // 获取 Quill 实例
   const range = quill.getSelection(true); // 当前光标位置[2](@ref)
   quill.insertEmbed(range.index, 'image', url); // 插入图片[2,7](@ref)
+};
+
+const exportToExcel = async () => {
+  try {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('评审记录');
+
+    // 设置列标题
+    const headers = ['序号', '日期', '发起人', '参与人', '目的', '结论', '下一步', '有价值', '价值体现'];
+    worksheet.addRow(headers);
+
+    // 设置标题行样式
+    const headerRow = worksheet.getRow(1);
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF0070C0' }
+      };
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    });
+
+    // 添加数据行
+    tableData.value.forEach((item, index) => {
+      // 解析HTML内容为纯文本，保留换行符
+       const parseHtmlToText = (html) => {
+         if (!html) return '';
+         const div = document.createElement('div');
+         div.innerHTML = html;
+         // 将<p>、<br>、<div>等标签转换为换行符
+         let text = html.replace(/<\/p>/gi, '\n')
+                       .replace(/<br\s*\/?>/gi, '\n')
+                       .replace(/<\/div>/gi, '\n')
+                       .replace(/<p[^>]*>/gi, '')
+                       .replace(/<div[^>]*>/gi, '')
+                       .replace(/<[^>]*>/g, '') // 移除其他HTML标签
+                       .replace(/&nbsp;/g, ' ') // 替换HTML空格
+                       .replace(/\n\s*\n/g, '\n') // 合并多个连续换行
+                       .trim();
+         return text;
+       };
+
+      const row = worksheet.addRow([
+        index + 1, // 序号
+        item.date || '', // 日期
+        item.initiator || '', // 发起人
+        item.participants || '', // 参与人
+        item.purpose || '', // 目的
+        parseHtmlToText(item.conclusion) || '', // 结论（转换为纯文本）
+        item.next_step || '', // 下一步
+        (item.valuable == 1) ? '有价值' : (item.valuable == 0) ? '无价值' : '常规会议', // 有价值
+        item.value_content || '' // 价值体现
+      ]);
+
+      // 设置数据行样式
+       row.eachCell((cell, colNumber) => {
+         cell.border = {
+           top: { style: 'thin' },
+           left: { style: 'thin' },
+           bottom: { style: 'thin' },
+           right: { style: 'thin' }
+         };
+         
+         // 根据列设置不同的对齐方式
+          if (colNumber <= 3 || colNumber === 8) { // 序号、日期、发起人、有价值 居中对齐
+            cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+          } else { // 其他列 垂直居中
+            cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+          }
+        });
+        
+        // 设置行高自适应
+        const maxLines = Math.max(
+          1,
+          (item.purpose || '').split('\n').length,
+          // (parseHtmlToText(item.conclusion) || '').split('\n').length,
+          (item.next_step || '').split('\n').length,
+          (item.value_content || '').split('\n').length
+        );
+        row.height = Math.max(20, maxLines * 19); // 基础高度20，每行增加15
+    });
+
+    // 自动调整列宽
+    worksheet.columns.forEach((column, index) => {
+      if (index === 0) column.width = 8; // 序号列
+      else if (index === 1) column.width = 15; // 日期列
+      else if (index === 4) column.width = 40; // 目的列
+      else if (index === 5) column.width = 125; // 结论列
+      else if (index === 6 || index === 8) column.width = 30; // 下一步、价值体现列
+      else if (index === 7) column.width = 12; // 有价值列
+      else column.width = 20; // 其他列
+    });
+
+    // 生成文件并下载
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `评审记录_${new Date().toISOString().split('T')[0]}.xlsx`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+
+    ElMessage.success('Excel文件导出成功');
+  } catch (error) {
+    console.error('导出Excel失败:', error);
+    ElMessage.error('导出Excel失败: ' + error.message);
+  }
 };
 
 const copyScreenshot = async () => {
