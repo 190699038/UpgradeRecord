@@ -662,11 +662,19 @@ const copyRichText = async () => {
       
       // 子任务列表
        group.subTasks.forEach((subTask, index) => {
-         const formattedContent = formatSubTaskContent(subTask.content)
+         const originalContent = subTask.content || ''
+         const isMultiLine = originalContent.includes('\n')
          const statusAndRemark = `   【${subTask.status}】   ${subTask.remark}`
          
-         // 子任务基础缩进
-         richText += `    ${getCircledNumber(index + 1)} ${formattedContent}${statusAndRemark}\n`
+         if (isMultiLine) {
+           // 多行内容：不添加序号，直接缩进显示
+           const formattedContent = formatSubTaskContent(originalContent)
+           richText += `    ${formattedContent}${statusAndRemark}\n`
+         } else {
+           // 单行内容：添加圆圈序号
+           const formattedContent = formatSubTaskContent(originalContent)
+           richText += `    ${getCircledNumber(index + 1)} ${formattedContent}${statusAndRemark}\n`
+         }
        })
       
       richText += '\n'
