@@ -9,20 +9,78 @@
         placeholder=""
         value-format="YYYYMMDD"
       />
-      <!-- <el-select v-model="searchParams.parent_task_id" placeholder="选择主任务" clearable style="width: 200px">
+      <el-select 
+        v-model="selectedTaskIds" 
+        placeholder="选择主任务" 
+        clearable 
+        multiple 
+        collapse-tags
+        collapse-tags-tooltip
+        style="width: 250px"
+        @change="handleMainTaskChange"
+      >
+        <el-option
+          label="全部"
+          value="all"
+        />
         <el-option
           v-for="item in mainTasks"
           :key="item.id"
           :label="item.task_content"
           :value="item.id"
         />
-      </el-select> -->
+      </el-select>
       <el-button type="primary" @click="fetchRecords">查询</el-button>
       <el-button type="primary" @click="copyYesterdayTasks">拷贝昨日任务</el-button>
+      <el-button type="success" @click="captureAndCopyTable">截图并复制</el-button>
+      <el-button type="warning" @click="copyRichText">复制富文本</el-button>
 
     </div>
 
-    <el-table :data="tableData" border class="custom-table" :span-method="objectSpanMethod" :row-style="getRowStyle">
+    <!-- 截图表格 -->
+    <el-table 
+      ref="screenshotTable" 
+      :data="tableData" 
+      border 
+      class="custom-table screenshot-table" 
+      :span-method="objectSpanMethod" 
+      :row-style="getRowStyle"
+      v-show="showScreenshotTable"
+      style="margin-bottom: 20px;"
+    >
+      <el-table-column label="序号" width="80" header-align="center" align="center">
+        <template #default="scope">
+          {{ scope.$index + 1 }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="parent_task_content" label="所属主任务" header-align="center" width="200">
+        <template #default="{ row }">
+          <div class="wrap-cell parent-task-content">{{ row.parent_task_content }}</div>
+        </template>
+      </el-table-column>
+      <el-table-column prop="sub_task_content" label="子任务内容" header-align="center" width="450">
+        <template #default="{ row }">
+          <div class="wrap-cell sub-task-content">{{ row.sub_task_content }}</div>
+        </template>
+      </el-table-column>
+      <el-table-column prop="sub_completion_status" label="完成状态" header-align="center" align="center" width="100">
+        <template #default="{ row }">
+          <span :style="{ 
+            color: parseInt(row.sub_completion_status) === 1 ? '#67c23a' : '#909399',
+            fontWeight: 'bold',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            backgroundColor: parseInt(row.sub_completion_status) === 1 ? '#f0f9ff' : '#f4f4f5'
+          }">
+            {{ parseInt(row.sub_completion_status) === 1 ? '已完成' : '未完成' }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="executor" label="执行人" header-align="center" align="center" width="100" />
+    </el-table>
+
+    <!-- 原始完整表格 -->
+    <el-table :data="tableData" border class="custom-table" :span-method="objectSpanMethod" :row-style="getRowStyle" v-show="!showScreenshotTable">
       <el-table-column label="序号" width="80" header-align="center" align="center">
         <template #default="scope">
           {{ scope.$index + 1 }}
@@ -126,7 +184,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../utils/api'
 
@@ -189,9 +247,16 @@ const getRowClassName = ({ row, rowIndex }) => {
 
 const searchParams = ref({
   creation_date: '',
-  parent_task_id: '',
+  parent_task_ids: '',
   sub_completion_status: -1
 })
+
+// 用于el-select多选的数组
+const selectedTaskIds = ref([])
+
+// 控制截图表格显示
+const showScreenshotTable = ref(false)
+const screenshotTable = ref(null)
 
 const fetchMainTasks = async () => {
   try {
@@ -216,9 +281,43 @@ const copyYesterdayTasks = async () => {
 }
 
 
+// 处理主任务选择变化
+const handleMainTaskChange = (value) => {
+  if (value.includes('all')) {
+    // 如果选择了"全部"，清空其他选项
+    if (value.length > 1) {
+      // 如果"全部"不是最后选择的，保留"全部"
+      if (value[value.length - 1] === 'all') {
+        selectedTaskIds.value = ['all']
+        searchParams.value.parent_task_ids = 'all'
+      } else {
+        // 如果"全部"不是最后选择的，移除"全部"
+        const filteredValues = value.filter(item => item !== 'all')
+        selectedTaskIds.value = filteredValues
+        searchParams.value.parent_task_ids = filteredValues.join(',')
+      }
+    } else {
+      selectedTaskIds.value = ['all']
+      searchParams.value.parent_task_ids = 'all'
+    }
+  } else {
+    // 将数组转换为逗号分隔的字符串
+    selectedTaskIds.value = value
+    searchParams.value.parent_task_ids = value.join(',')
+  }
+}
+
 const fetchRecords = async () => {
   try {
-    const response = await api.post('/api.php?table=follow_up_sub_tasks&action=list', searchParams.value)
+    // 构建查询参数
+    const queryParams = { ...searchParams.value }
+    
+    // 如果选择了"全部"或没有选择任何主任务，不传递parent_task_ids参数
+    if (queryParams.parent_task_ids === 'all' || queryParams.parent_task_ids === '') {
+      delete queryParams.parent_task_ids
+    }
+    
+    const response = await api.post('/api.php?table=follow_up_sub_tasks&action=list', queryParams)
     tableData.value = response.data.data.map(item => {
       // 查找对应的主任务内容
       const mainTask = mainTasks.value.find(task => task.id === item.parent_task_id)
@@ -398,6 +497,197 @@ const getRowStyle = ({ row }) => {
   return {
     backgroundColor: colors[colorIndex]
   }
+}
+
+// 截图并复制到剪贴板
+const captureAndCopyTable = async () => {
+  try {
+    ElMessage.info('正在生成截图...')
+    
+    // 显示截图表格
+    showScreenshotTable.value = true
+    
+    // 等待DOM更新
+    await nextTick()
+    
+    // 再次等待确保表格完全渲染
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    // 动态导入html2canvas
+    const html2canvas = (await import('html2canvas')).default
+    
+    // 获取截图表格元素
+    const tableElement = screenshotTable.value?.$el
+    
+    if (!tableElement) {
+      throw new Error('无法找到表格元素')
+    }
+    
+    console.log('表格元素:', tableElement)
+    
+    // 生成截图
+    const canvas = await html2canvas(tableElement, {
+      backgroundColor: '#ffffff',
+      scale: 1.5, // 提高清晰度
+      useCORS: true,
+      allowTaint: true,
+      logging: false, // 关闭日志
+      width: tableElement.scrollWidth,
+      height: tableElement.scrollHeight
+    })
+    
+    // 创建新的canvas用于裁剪
+    const croppedCanvas = document.createElement('canvas')
+    const ctx = croppedCanvas.getContext('2d')
+    
+    // 计算实际内容宽度（前5列的总宽度）
+     const actualWidth = 80 + 200 + 450 + 100 + 100 // 序号+主任务+子任务+状态+执行人
+     const scaledWidth = actualWidth * 1.5 // 考虑scale因子
+    
+    // 设置裁剪后的canvas尺寸
+    croppedCanvas.width = scaledWidth
+    croppedCanvas.height = canvas.height
+    
+    // 将原canvas的内容绘制到新canvas上，只保留左侧有内容的部分
+    ctx.drawImage(canvas, 0, 0, scaledWidth, canvas.height, 0, 0, scaledWidth, canvas.height)
+    
+    console.log('截图生成成功，原始canvas尺寸:', canvas.width, 'x', canvas.height)
+    console.log('裁剪后canvas尺寸:', croppedCanvas.width, 'x', croppedCanvas.height)
+    
+    // 将裁剪后的canvas转换为blob
+    croppedCanvas.toBlob(async (blob) => {
+      try {
+        if (!blob) {
+          throw new Error('生成图片失败')
+        }
+        
+        // 检查浏览器是否支持剪贴板API
+        if (navigator.clipboard && navigator.clipboard.write) {
+          // 复制到剪贴板
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              'image/png': blob
+            })
+          ])
+          
+          ElMessage.success('表格截图已复制到剪贴板')
+        } else {
+          // 如果不支持剪贴板API，直接下载
+          throw new Error('浏览器不支持剪贴板API')
+        }
+      } catch (error) {
+        console.error('复制到剪贴板失败:', error)
+        ElMessage.warning('复制到剪贴板失败，正在下载图片')
+        
+        // 如果复制失败，提供下载选项
+        const url = croppedCanvas.toDataURL('image/png')
+        const link = document.createElement('a')
+        link.download = `表格截图_${new Date().toISOString().slice(0,10)}.png`
+        link.href = url
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        
+        ElMessage.success('图片已下载到本地')
+      }
+    }, 'image/png')
+    
+  } catch (error) {
+    console.error('截图失败:', error)
+    ElMessage.error(`截图失败: ${error.message}`)
+  } finally {
+    // 隐藏截图表格
+    showScreenshotTable.value = false
+  }
+}
+
+// 复制富文本到剪贴板
+const copyRichText = async () => {
+  try {
+    if (!tableData.value || tableData.value.length === 0) {
+      ElMessage.warning('没有数据可复制')
+      return
+    }
+
+    // 按主任务分组
+    const groupedData = {}
+    tableData.value.forEach(item => {
+      const parentTaskId = item.parent_task_id
+      const parentTaskContent = item.parent_task_content
+      
+      if (!groupedData[parentTaskId]) {
+        groupedData[parentTaskId] = {
+          content: parentTaskContent,
+          subTasks: []
+        }
+      }
+      
+      groupedData[parentTaskId].subTasks.push({
+        content: item.sub_task_content,
+        status: parseInt(item.sub_completion_status) === 1 ? '已完成' : '未完成',
+        remark: item.remark || ''
+      })
+    })
+
+    // 生成富文本格式
+    let richText = ''
+    let mainTaskIndex = 1
+    
+    Object.values(groupedData).forEach(group => {
+      // 主任务标题（加粗）
+      richText += `**${getChineseNumber(mainTaskIndex)}、${group.content}**\n`
+      
+      // 子任务列表
+      group.subTasks.forEach((subTask, index) => {
+        richText += `   ${getCircledNumber(index + 1)} ${subTask.content}   ${subTask.status}   ${subTask.remark}\n`
+      })
+      
+      richText += '\n'
+      mainTaskIndex++
+    })
+
+    // 创建HTML格式的富文本
+    const htmlText = richText
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>')
+
+    // 复制到剪贴板
+    if (navigator.clipboard && navigator.clipboard.write) {
+      const clipboardItem = new ClipboardItem({
+        'text/html': new Blob([htmlText], { type: 'text/html' }),
+        'text/plain': new Blob([richText.replace(/\*\*(.*?)\*\*/g, '$1')], { type: 'text/plain' })
+      })
+      
+      await navigator.clipboard.write([clipboardItem])
+      ElMessage.success('富文本已复制到剪贴板，可直接粘贴到钉钉')
+    } else {
+      // 降级方案：复制纯文本
+      await navigator.clipboard.writeText(richText.replace(/\*\*(.*?)\*\*/g, '$1'))
+      ElMessage.success('文本已复制到剪贴板')
+    }
+    
+  } catch (error) {
+    console.error('复制富文本失败:', error)
+    ElMessage.error('复制失败，请重试')
+  }
+}
+
+// 获取中文数字
+const getChineseNumber = (num) => {
+  const chineseNumbers = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十']
+  if (num <= 10) {
+    return chineseNumbers[num]
+  }
+  return num.toString()
+}
+
+// 获取带圆圈的数字
+const getCircledNumber = (num) => {
+  const circledNumbers = ['', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩']
+  if (num <= 10) {
+    return circledNumbers[num]
+  }
+  return `(${num})`
 }
 
 // 暴露方法给父组件

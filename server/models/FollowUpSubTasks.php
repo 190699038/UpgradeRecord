@@ -24,31 +24,45 @@ class FollowUpSubTasks extends BaseModel
     }
 
     public function list($data) {
-        // echo ($this->table);
-        $sql = "SELECT * FROM {$this->table}";
-        $params = [];
-        $conditions = [];
-
-        if (!empty($data['creation_date'])) {
-            $conditions[] = "creation_date = ?";
-            $params[] = $data['creation_date'];
-        } 
+         // 构建基础SQL查询
+        $sql = "SELECT m.task_content, st.* FROM main_tasks m "
+             . "JOIN {$this->table} st ON m.id = st.parent_task_id "
+             . "WHERE m.completion_status = 0";
         
-        if (!empty($data['sub_completion_status'])) {
-            $conditions[] = "sub_completion_status = ?";
+        $params = [];
+        
+        // 添加条件过滤
+        if (!empty($data['creation_date'])) {
+            $sql .= " AND st.creation_date = ?";
+            $params[] = $data['creation_date'];
+        }
+        
+        if (isset($data['sub_completion_status']) && $data['sub_completion_status'] >= 0) {
+            $sql .= " AND st.sub_completion_status = ?";
             $params[] = $data['sub_completion_status'];
         }
-
+        
         if (!empty($data['executor'])) {
-            $conditions[] = "executor = ?";
+            $sql .= " AND st.executor = ?";
             $params[] = $data['executor'];
         }
-
-        if (!empty($conditions)) {
-            $sql .= " WHERE " . implode(' AND ', $conditions);
+        if (!empty($data['parent_task_ids'])) {
+            // 处理IN查询，支持逗号分隔的ID字符串
+            $taskIds = is_array($data['parent_task_ids']) ? $data['parent_task_ids'] : explode(',', $data['parent_task_ids']);
+            $taskIds = array_filter(array_map('trim', $taskIds)); // 去除空值和空格
+            
+            if (!empty($taskIds)) {
+                $placeholders = str_repeat('?,', count($taskIds) - 1) . '?';
+                $sql .= " AND st.parent_task_id IN ({$placeholders})";
+                $params = array_merge($params, $taskIds);
+            }
         }
-        // $sql .= ' order by date desc';
-
+        
+        
+        // 可选：添加排序
+        // $sql .= " ORDER BY st.id DESC";
+        
+        // 执行查询
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -57,6 +71,37 @@ class FollowUpSubTasks extends BaseModel
 
     }
 
+
+    public function create($data) {
+        $sql = "INSERT INTO {$this->table} (parent_task_id,sub_task_content,sub_completion_status,executor,remark,creation_date) VALUES ( ?,?,?,?,?,?)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            $data['parent_task_id'],
+            $data['sub_task_content'],
+            $data['sub_completion_status'],
+            $data['executor'],
+            $data['remark'],
+            date('Ymd')
+        ]);
+        $obj = $this->db->lastInsertId();
+        return $this->returnResult($obj);
+    }
+
+    public function update($id, $data) {
+        $sql = "UPDATE {$this->table} SET sub_task_content=?, sub_completion_status=?, executor=?, remark=?, end_date=? WHERE id=?";
+        $stmt = $this->db->prepare($sql);
+        $obj =  $stmt->execute([
+            $data['sub_task_content'],
+            $data['sub_completion_status'],
+            $data['executor'],
+            $data['remark'],  
+            $data['end_date'],
+            $id
+        ]);
+        return $this->returnResult($obj);
+
+    }
+    
     //拷贝上一天的子任务
     public function copy_yesterday(){
         try {
@@ -111,77 +156,6 @@ class FollowUpSubTasks extends BaseModel
         } catch (Exception $e) {
             return $this->returnResult(null, false, '复制任务失败: ' . $e->getMessage());
         }
-    }
-
-    public function create($data) {
-        $sql = "INSERT INTO {$this->table} (parent_task_id,sub_task_content,sub_completion_status,executor,remark,creation_date) VALUES ( ?,?,?,?,?,?)";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            $data['parent_task_id'],
-            $data['sub_task_content'],
-            $data['sub_completion_status'],
-            $data['executor'],
-            $data['remark'],
-            date('Ymd')
-        ]);
-        $obj = $this->db->lastInsertId();
-        return $this->returnResult($obj);
-    }
-
-    public function update($id, $data) {
-        $sql = "UPDATE {$this->table} SET sub_task_content=?, sub_completion_status=?, executor=?, remark=?, end_date=? WHERE id=?";
-        $stmt = $this->db->prepare($sql);
-        $obj =  $stmt->execute([
-            $data['sub_task_content'],
-            $data['sub_completion_status'],
-            $data['executor'],
-            $data['remark'],  
-            $data['end_date'],
-            $id
-        ]);
-        return $this->returnResult($obj);
-    }
-    
-    /**
-     * 获取指定日期、状态和执行者的子任务，并关联主任务内容
-     * 优化查询：使用JOIN连接主任务表和子任务表
-     * 
-     * @param array $data 包含查询条件的数组
-     * @return array 查询结果
-     */
-    public function getTasksWithMainContent($data) {
-        // 构建基础SQL查询
-        $sql = "SELECT m.task_content, st.* FROM main_tasks m "
-             . "JOIN {$this->table} st ON m.id = st.parent_task_id "
-             . "WHERE m.completion_status = 0";
-        
-        $params = [];
-        
-        // 添加条件过滤
-        if (!empty($data['creation_date'])) {
-            $sql .= " AND st.creation_date = ?";
-            $params[] = $data['creation_date'];
-        }
-        
-        if (isset($data['sub_completion_status'])) {
-            $sql .= " AND st.sub_completion_status = ?";
-            $params[] = $data['sub_completion_status'];
-        }
-        
-        if (!empty($data['executor'])) {
-            $sql .= " AND st.executor = ?";
-            $params[] = $data['executor'];
-        }
-        
-        // 可选：添加排序
-        // $sql .= " ORDER BY st.id DESC";
-        
-        // 执行查询
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        return $this->returnResult($result);
     }
 
 }

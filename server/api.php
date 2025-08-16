@@ -69,9 +69,6 @@ try {
         case 'product_record':
             echo json_encode($model->sendDingTalkText($data));
             break;
-        case 'copy_yesterday':
-            echo json_encode($model->copy_yesterday());
-            break;
         default:
             echo json_encode($model->getAll());
     }
