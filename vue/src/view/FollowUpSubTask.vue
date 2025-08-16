@@ -648,7 +648,7 @@ const copyRichText = async () => {
       groupedData[parentTaskId].subTasks.push({
         content: item.sub_task_content,
         status: parseInt(item.sub_completion_status) === 1 ? '已完成' : '未完成',
-        remark: item.remark || '无'
+        remark: item.remark || ''
       })
     })
 
@@ -667,9 +667,16 @@ const copyRichText = async () => {
          const statusAndRemark = `   【${subTask.status}】   ${subTask.remark}`
          
          if (isMultiLine) {
-           // 多行内容：不添加序号，直接缩进显示
-           const formattedContent = formatSubTaskContent(originalContent)
-           richText += `    ${formattedContent}${statusAndRemark}\n`
+          
+           if(group.subTasks.length > 1){
+              const formattedContent = formatSubTaskContent(originalContent)
+              richText += `    ${getCircledNumber(index + 1)}\n     ${formattedContent}\n${statusAndRemark}\n`
+           }else{
+             // 多行内容：不添加序号，直接缩进显示
+              const formattedContent = formatSubTaskContent(originalContent)
+              richText += `    ${formattedContent}${statusAndRemark}\n`
+           }
+          
          } else {
            // 单行内容：添加圆圈序号
            const formattedContent = formatSubTaskContent(originalContent)
@@ -684,6 +691,7 @@ const copyRichText = async () => {
     // 创建HTML格式的富文本
     const htmlText = richText
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/【已完成】/g, '<span style="color: green;">【已完成】</span>')
       .replace(/\n/g, '<br>')
       .replace(/  /g, '&nbsp;&nbsp;') // 保持缩进
 
