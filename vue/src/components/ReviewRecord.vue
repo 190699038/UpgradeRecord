@@ -89,9 +89,9 @@
 
         <el-form-item label="价值">
           <el-radio-group v-model="formData.valuable">
-            <el-radio :label="1">有价值</el-radio>
-            <el-radio :label="0">无价值</el-radio>
-            <el-radio :label="2">常规会议</el-radio>
+            <el-radio :value="1">有价值</el-radio>
+                <el-radio :value="0">无价值</el-radio>
+                <el-radio :value="2">常规会议</el-radio>
           </el-radio-group>
         </el-form-item>
                 <el-form-item label="下一步">

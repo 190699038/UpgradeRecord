@@ -6,6 +6,7 @@ import UserManagement from '@/components/UserManagement.vue'
 import DailyReminder from '@/components/DailyReminder.vue'
 import KeyTask from '@/components/KeyTask.vue'
 import ProductRecord from '@/components/ProductRecord.vue'
+import FollowUpTask from '../components/FollowUpTask.vue'
 
 export default createRouter({
   history: createWebHashHistory(),
@@ -16,7 +17,7 @@ export default createRouter({
       children: [
         { path: 'upgrade-record', component: UpgradeRecord },
         { path: 'product-record', component: ProductRecord },
-
+        { path: 'follow-up-task', component: FollowUpTask },
         { path: 'review-record', component: ReviewRecord },
         { path: 'user-management', component: UserManagement },
         { path: 'daily-reminders', component: DailyReminder },

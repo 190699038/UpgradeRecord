@@ -8,7 +8,8 @@ require __DIR__.'/models/ChenYaopuReview.php';
 require __DIR__.'/models/DailyUpdate.php';
 require __DIR__.'/models/DailyReminder.php';
 require __DIR__.'/models/KeyTask.php';
-
+require __DIR__.'/models/FollowUpMainTasks.php';
+require __DIR__.'/models/FollowUpSubTasks.php';
 
 // 处理跨域请求
 header('Access-Control-Allow-Origin: *');
@@ -21,8 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 try {
+   
     $table = $_GET['table'] ?? '';
     $action = $_GET['action'] ?? 'getAll';
+
+    echo $table;
     $id = $_GET['id'] ?? null;
     $model = match($table) {
         'upgrade_record' => new UpgradeRecord(),
@@ -32,6 +36,8 @@ try {
         'daily_updates' => new DailyUpdate(),
         'key_tasks' => new KeyTask(),
         'daily_reminders' => new DailyReminder(),
+        'follow_up_main_tasks' => new FollowUpMainTasks(),
+        'follow_up_sub_tasks' => new FollowUpSubTasks(),
         default => throw new Exception('Invalid table parameter')
     };
 
@@ -62,6 +68,9 @@ try {
             break;
         case 'product_record':
             echo json_encode($model->sendDingTalkText($data));
+            break;
+        case 'copy_yesterday':
+            echo json_encode($model->copy_yesterday());
             break;
         default:
             echo json_encode($model->getAll());

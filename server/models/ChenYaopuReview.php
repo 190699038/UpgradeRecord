@@ -6,7 +6,7 @@ class ChenYaopuReview extends BaseModel {
     protected $fields = ['date', 'purpose', 'initiator', 'participants', 'conclusion', 'screenshot_url','content'];
 
     public function create($data) {
-        $sql = "INSERT INTO {$this->table} (date, purpose, initiator, participants,conclusion,screenshot_url,content) VALUES (?, ?, ?, ?, ?, ?,?)";
+        $sql = "INSERT INTO {$this->table} (date, purpose, initiator, participants,conclusion,screenshot_url,content, around_goal, next_step, valuable, value_content) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
             $data['date'],
@@ -15,14 +15,20 @@ class ChenYaopuReview extends BaseModel {
             $data['participants'],
             $data['conclusion'],
             $data['screenshot_url'],
-            $data['content']
+            $data['content'],
+            $data['around_goal'],
+            $data['next_step'],
+            $data['valuable'],
+            $data['value_content']
         ]);
         $obj = $this->db->lastInsertId();
         return $this->returnResult($obj);
     }
 
     public function update($id, $data) {
-        $sql = "UPDATE {$this->table} SET date=?, purpose=?, initiator=?, participants=? , conclusion=?, screenshot_url=?,content=? WHERE id=?";
+        $valuable = empty($data['valuable']) ? 0 : (int)$data['valuable'];
+
+        $sql = "UPDATE {$this->table} SET date=?, purpose=?, initiator=?, participants=? , conclusion=?, screenshot_url=?,content=?, around_goal=?, next_step=?, valuable=?, value_content=? WHERE id=?";
         $stmt = $this->db->prepare($sql);
         $obj =  $stmt->execute([
             $data['date'],
@@ -32,6 +38,11 @@ class ChenYaopuReview extends BaseModel {
             $data['conclusion'],
             $data['screenshot_url'],
             $data['content'],
+            $data['around_goal'],
+            $data['next_step'],
+            $valuable,
+            $data['value_content'],
+            
             $id
         ]);
         return $this->returnResult($obj);
@@ -59,7 +70,7 @@ class ChenYaopuReview extends BaseModel {
         if (!empty($conditions)) {
             $sql .= " WHERE " . implode(' AND ', $conditions);
         }
-        $sql .= ' order by id desc';
+        $sql .= ' order by date desc';
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);

@@ -5,8 +5,9 @@
       <!-- <el-menu-item index="/product-record">产品需求记录</el-menu-item> -->
 
       <el-menu-item index="/upgrade-record">升级记录</el-menu-item>
-
       <el-menu-item index="/review-record">总办复盘记录</el-menu-item>
+      <el-menu-item index="/follow-up-task">日常跟进事项</el-menu-item>
+
       <el-menu-item index="/user-management">用户管理</el-menu-item>
     </el-menu>
     <router-view class="content-container" />
