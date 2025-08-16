@@ -371,6 +371,11 @@ onMounted(() => {
     fetchRecords()
   })
 })
+
+// 暴露方法给父组件
+defineExpose({
+  fetchRecords
+})
 </script>
 
 <style scoped>
@@ -410,13 +415,35 @@ onMounted(() => {
 }
 
 .custom-table .el-table {
-  border: 1px solid #dcdfe6;
+  border: 2px solid #c0c4cc !important;
 }
 
 .custom-table .el-table td,
 .custom-table .el-table th {
-  border-bottom: 2px solid #e4e7ed;
-  border-right: 1px solid #e4e7ed;
+  border-bottom: 2px solid #c0c4cc !important;
+  border-right: 2px solid #c0c4cc !important;
+}
+
+.custom-table .el-table tbody tr:hover td {
+  border-bottom: 2px solid #c0c4cc !important;
+  border-right: 2px solid #c0c4cc !important;
+}
+
+.custom-table .el-table--border {
+  border: 2px solid #c0c4cc !important;
+}
+
+.custom-table .el-table--border td,
+.custom-table .el-table--border th {
+  border-right: 2px solid #c0c4cc !important;
+}
+
+.custom-table .el-table--border th {
+  border-bottom: 2px solid #c0c4cc !important;
+}
+
+.custom-table .el-table--border td {
+  border-bottom: 2px solid #c0c4cc !important;
 }
 
 .custom-table .el-table th {

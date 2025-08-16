@@ -231,6 +231,11 @@ onMounted(() => {
   searchParams.value.end_date = end.toISOString().slice(0,10).replace(/-/g,'')
   fetchRecords()
 })
+
+// 暴露方法给父组件
+defineExpose({
+  fetchRecords
+})
 </script>
 
 <style scoped>
