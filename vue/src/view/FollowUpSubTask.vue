@@ -602,6 +602,29 @@ const captureAndCopyTable = async () => {
 }
 
 // 复制富文本到剪贴板
+// 处理子任务内容，多行数据直接缩进展示
+const formatSubTaskContent = (content) => {
+  if (!content) return ''
+  
+  const lines = content.split('\n')
+  
+  // 如果只有一行，直接返回
+  if (lines.length === 1) {
+    return content
+  }
+  
+  // 多行数据，每行都添加缩进
+  let formattedContent = ''
+  lines.forEach((line, lineIndex) => {
+    if (lineIndex > 0) {
+      formattedContent += '\n      ' // 换行后添加缩进
+    }
+    formattedContent += line
+  })
+  
+  return formattedContent
+}
+
 const copyRichText = async () => {
   try {
     if (!tableData.value || tableData.value.length === 0) {
@@ -625,7 +648,7 @@ const copyRichText = async () => {
       groupedData[parentTaskId].subTasks.push({
         content: item.sub_task_content,
         status: parseInt(item.sub_completion_status) === 1 ? '已完成' : '未完成',
-        remark: item.remark || ''
+        remark: item.remark || '无'
       })
     })
 
@@ -634,13 +657,17 @@ const copyRichText = async () => {
     let mainTaskIndex = 1
     
     Object.values(groupedData).forEach(group => {
-      // 主任务标题（加粗）
+      // 主任务标题（加粗，不缩进）
       richText += `**${getChineseNumber(mainTaskIndex)}、${group.content}**\n`
       
       // 子任务列表
-      group.subTasks.forEach((subTask, index) => {
-        richText += `   ${getCircledNumber(index + 1)} ${subTask.content}   ${subTask.status}   ${subTask.remark}\n`
-      })
+       group.subTasks.forEach((subTask, index) => {
+         const formattedContent = formatSubTaskContent(subTask.content)
+         const statusAndRemark = `   【${subTask.status}】   ${subTask.remark}`
+         
+         // 子任务基础缩进
+         richText += `    ${getCircledNumber(index + 1)} ${formattedContent}${statusAndRemark}\n`
+       })
       
       richText += '\n'
       mainTaskIndex++
@@ -650,6 +677,7 @@ const copyRichText = async () => {
     const htmlText = richText
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\n/g, '<br>')
+      .replace(/  /g, '&nbsp;&nbsp;') // 保持缩进
 
     // 复制到剪贴板
     if (navigator.clipboard && navigator.clipboard.write) {
