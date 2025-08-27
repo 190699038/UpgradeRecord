@@ -647,7 +647,8 @@ const copyRichText = async () => {
       
       groupedData[parentTaskId].subTasks.push({
         content: item.sub_task_content,
-        status: parseInt(item.sub_completion_status) === 1 ? '已完成' : '未完成',
+        // status: parseInt(item.sub_completion_status) === 1 ? '已完成' : '未完成',
+        status: '',
         remark: item.remark || ''
       })
     })
@@ -664,7 +665,7 @@ const copyRichText = async () => {
        group.subTasks.forEach((subTask, index) => {
          const originalContent = subTask.content || ''
          const isMultiLine = originalContent.includes('\n')
-         const statusAndRemark = `   【${subTask.status}】   ${subTask.remark}`
+         const statusAndRemark = ''//`   【${subTask.status}】   ${subTask.remark}`
          
          if (isMultiLine) {
           
@@ -727,8 +728,8 @@ const getChineseNumber = (num) => {
 
 // 获取带圆圈的数字
 const getCircledNumber = (num) => {
-  const circledNumbers = ['', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩']
-  if (num <= 10) {
+  const circledNumbers = ['', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
+  if (num <= 20) {
     return circledNumbers[num]
   }
   return `(${num})`
