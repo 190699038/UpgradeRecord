@@ -407,11 +407,11 @@ const submitForm = async () => {
 
 const handleComplete = async (row) => {
   try {
-    await ElMessageBox.confirm('确定要将此任务标记为完成吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'info'
-    })
+    // await ElMessageBox.confirm('确定要将此任务标记为完成吗？', '提示', {
+    //   confirmButtonText: '确定',
+    //   cancelButtonText: '取消',
+    //   type: 'info'
+    // })
     
     // 设置完成状态和今日日期
     const today = new Date()
@@ -486,12 +486,12 @@ onMounted(() => {
 const getRowStyle = ({ row }) => {
   const taskId = row.parent_task_id
   const colors = [
-    '#F8F9FA', // Very Light Gray
-    '#F0F4F8', // Light Blue-Gray
-    '#F5F5F5', // Light Gray
-    '#FDFDFD', // Off-White
-    '#F9F9F9', // Slightly Darker Off-White
-    '#F2F4F6'  // Another Light Blue-Gray
+    '#FFF0E6F9', // Light Peach
+    '#E6FFF079', // Light Mint
+    '#F0E6FF59', // Light Lavender
+    '#E6F0FF59', // Light Sky Blue
+    '#FFE6F059', // Light Rose
+    '#FFFBE659'  // Light Cream
   ]
   const colorIndex = taskId % colors.length
   return {
@@ -778,35 +778,35 @@ defineExpose({
 }
 
 .custom-table .el-table {
-  border: 2px solid #c0c4cc !important;
+  border: 2px solid #000000 !important;
 }
 
 .custom-table .el-table td,
 .custom-table .el-table th {
-  border-bottom: 2px solid #c0c4cc !important;
-  border-right: 2px solid #c0c4cc !important;
+  border-bottom: 2px solid #000000 !important;
+  border-right: 2px solid #000000 !important;
 }
 
 .custom-table .el-table tbody tr:hover td {
-  border-bottom: 2px solid #c0c4cc !important;
-  border-right: 2px solid #c0c4cc !important;
+  border-bottom: 2px solid #000000 !important;
+  border-right: 2px solid #000000 !important;
 }
 
 .custom-table .el-table--border {
-  border: 2px solid #c0c4cc !important;
+  border: 2px solid #000000 !important;
 }
 
 .custom-table .el-table--border td,
 .custom-table .el-table--border th {
-  border-right: 2px solid #c0c4cc !important;
+  border-right: 2px solid #000000 !important;
 }
 
 .custom-table .el-table--border th {
-  border-bottom: 2px solid #c0c4cc !important;
+  border-bottom: 2px solid #000000 !important;
 }
 
 .custom-table .el-table--border td {
-  border-bottom: 2px solid #c0c4cc !important;
+  border-bottom: 2px solid #000000 !important;
 }
 
 /* 不同主任务的背景颜色 - 使用多重选择器确保生效 */
@@ -814,132 +814,132 @@ defineExpose({
 :deep(.el-table tbody .bg-color-1),
 :deep(.custom-table .bg-color-1),
 .bg-color-1 {
-  background-color: #F8F9FA !important;
+  background-color: #FFF0E6 !important;
 }
 
 :deep(.el-table .bg-color-2),
 :deep(.el-table tbody .bg-color-2),
 :deep(.custom-table .bg-color-2),
 .bg-color-2 {
-  background-color: #F0F4F8 !important;
+  background-color: #E6FFF0 !important;
 }
 
 :deep(.el-table .bg-color-3),
 :deep(.el-table tbody .bg-color-3),
 :deep(.custom-table .bg-color-3),
 .bg-color-3 {
-  background-color: #F5F5F5 !important;
+  background-color: #F0E6FF !important;
 }
 
 :deep(.el-table .bg-color-4),
 :deep(.el-table tbody .bg-color-4),
 :deep(.custom-table .bg-color-4),
 .bg-color-4 {
-  background-color: #FDFDFD !important;
+  background-color: #E6F0FF !important;
 }
 
 :deep(.el-table .bg-color-5),
 :deep(.el-table tbody .bg-color-5),
 :deep(.custom-table .bg-color-5),
 .bg-color-5 {
-  background-color: #F9F9F9 !important;
+  background-color: #FFE6F0 !important;
 }
 
 :deep(.el-table .bg-color-6),
 :deep(.el-table tbody .bg-color-6),
 :deep(.custom-table .bg-color-6),
 .bg-color-6 {
-  background-color: #F2F4F6 !important;
+  background-color: #FFFBE6 !important;
 }
 
 :deep(.el-table .bg-color-1 td),
 :deep(.el-table tbody .bg-color-1 td),
 :deep(.custom-table .bg-color-1 td),
 .bg-color-1 td {
-  background-color: #F8F9FA !important;
+  background-color: #FFF0E6 !important;
 }
 
 :deep(.el-table .bg-color-2 td),
 :deep(.el-table tbody .bg-color-2 td),
 :deep(.custom-table .bg-color-2 td),
 .bg-color-2 td {
-  background-color: #F0F4F8 !important;
+  background-color: #E6FFF0 !important;
 }
 
 :deep(.el-table .bg-color-3 td),
 :deep(.el-table tbody .bg-color-3 td),
 :deep(.custom-table .bg-color-3 td),
 .bg-color-3 td {
-  background-color: #F5F5F5 !important;
+  background-color: #F0E6FF !important;
 }
 
 :deep(.el-table .bg-color-4 td),
 :deep(.el-table tbody .bg-color-4 td),
 :deep(.custom-table .bg-color-4 td),
 .bg-color-4 td {
-  background-color: #FDFDFD !important;
+  background-color: #E6F0FF !important;
 }
 
 :deep(.el-table .bg-color-5 td),
 :deep(.el-table tbody .bg-color-5 td),
 :deep(.custom-table .bg-color-5 td),
 .bg-color-5 td {
-  background-color: #F9F9F9 !important;
+  background-color: #FFE6F0 !important;
 }
 
 :deep(.el-table .bg-color-6 td),
 :deep(.el-table tbody .bg-color-6 td),
 :deep(.custom-table .bg-color-6 td),
 .bg-color-6 td {
-  background-color: #F2F4F6 !important;
+  background-color: #FFFBE6 !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-1:hover) {
-  background-color: #E9ECEF !important;
+  background-color: #FFE0CC !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-2:hover) {
-  background-color: #E2E6EA !important;
+  background-color: #CCFFE0 !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-3:hover) {
-  background-color: #EAEAEA !important;
+  background-color: #E0CCFF !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-4:hover) {
-  background-color: #F0F0F0 !important;
+  background-color: #CCDEFF !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-5:hover) {
-  background-color: #EFEFEF !important;
+  background-color: #FFCCE0 !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-6:hover) {
-  background-color: #E5E8EB !important;
+  background-color: #FFF5CC !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-1:hover td) {
-  background-color: #E9ECEF !important;
+  background-color: #FFE0CC !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-2:hover td) {
-  background-color: #E2E6EA !important;
+  background-color: #CCFFE0 !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-3:hover td) {
-  background-color: #EAEAEA !important;
+  background-color: #E0CCFF !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-4:hover td) {
-  background-color: #F0F0F0 !important;
+  background-color: #CCDEFF !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-5:hover td) {
-  background-color: #EFEFEF !important;
+  background-color: #FFCCE0 !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-6:hover td) {
-  background-color: #E5E8EB !important;
+  background-color: #FFF5CC !important;
 }
 
 .custom-table .el-table th {
@@ -956,9 +956,10 @@ defineExpose({
 .parent-task-content {
   color: #2c5aa0;
   font-weight: 600;
-  background-color: #f0f4f8;
+  /* background-color: #f0f4f8; */
   border-radius: 4px;
   padding: 4px 8px;
+  font-size: medium;
 }
 
 .sub-task-content {
