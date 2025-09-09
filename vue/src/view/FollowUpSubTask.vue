@@ -486,12 +486,12 @@ onMounted(() => {
 const getRowStyle = ({ row }) => {
   const taskId = row.parent_task_id
   const colors = [
-    '#f0f9ff', // 浅蓝色
-    '#f0fdf4', // 浅绿色
-    '#fefce8', // 浅黄色
-    '#fef2f2', // 浅红色
-    '#faf5ff', // 浅紫色
-    '#f0fdfa'  // 浅青色
+    '#F8F9FA', // Very Light Gray
+    '#F0F4F8', // Light Blue-Gray
+    '#F5F5F5', // Light Gray
+    '#FDFDFD', // Off-White
+    '#F9F9F9', // Slightly Darker Off-White
+    '#F2F4F6'  // Another Light Blue-Gray
   ]
   const colorIndex = taskId % colors.length
   return {
@@ -814,132 +814,132 @@ defineExpose({
 :deep(.el-table tbody .bg-color-1),
 :deep(.custom-table .bg-color-1),
 .bg-color-1 {
-  background-color: #f0f9ff !important;
+  background-color: #F8F9FA !important;
 }
 
 :deep(.el-table .bg-color-2),
 :deep(.el-table tbody .bg-color-2),
 :deep(.custom-table .bg-color-2),
 .bg-color-2 {
-  background-color: #f0fdf4 !important;
+  background-color: #F0F4F8 !important;
 }
 
 :deep(.el-table .bg-color-3),
 :deep(.el-table tbody .bg-color-3),
 :deep(.custom-table .bg-color-3),
 .bg-color-3 {
-  background-color: #fefce8 !important;
+  background-color: #F5F5F5 !important;
 }
 
 :deep(.el-table .bg-color-4),
 :deep(.el-table tbody .bg-color-4),
 :deep(.custom-table .bg-color-4),
 .bg-color-4 {
-  background-color: #fef2f2 !important;
+  background-color: #FDFDFD !important;
 }
 
 :deep(.el-table .bg-color-5),
 :deep(.el-table tbody .bg-color-5),
 :deep(.custom-table .bg-color-5),
 .bg-color-5 {
-  background-color: #faf5ff !important;
+  background-color: #F9F9F9 !important;
 }
 
 :deep(.el-table .bg-color-6),
 :deep(.el-table tbody .bg-color-6),
 :deep(.custom-table .bg-color-6),
 .bg-color-6 {
-  background-color: #f0fdfa !important;
+  background-color: #F2F4F6 !important;
 }
 
 :deep(.el-table .bg-color-1 td),
 :deep(.el-table tbody .bg-color-1 td),
 :deep(.custom-table .bg-color-1 td),
 .bg-color-1 td {
-  background-color: #f0f9ff !important;
+  background-color: #F8F9FA !important;
 }
 
 :deep(.el-table .bg-color-2 td),
 :deep(.el-table tbody .bg-color-2 td),
 :deep(.custom-table .bg-color-2 td),
 .bg-color-2 td {
-  background-color: #f0fdf4 !important;
+  background-color: #F0F4F8 !important;
 }
 
 :deep(.el-table .bg-color-3 td),
 :deep(.el-table tbody .bg-color-3 td),
 :deep(.custom-table .bg-color-3 td),
 .bg-color-3 td {
-  background-color: #fefce8 !important;
+  background-color: #F5F5F5 !important;
 }
 
 :deep(.el-table .bg-color-4 td),
 :deep(.el-table tbody .bg-color-4 td),
 :deep(.custom-table .bg-color-4 td),
 .bg-color-4 td {
-  background-color: #fef2f2 !important;
+  background-color: #FDFDFD !important;
 }
 
 :deep(.el-table .bg-color-5 td),
 :deep(.el-table tbody .bg-color-5 td),
 :deep(.custom-table .bg-color-5 td),
 .bg-color-5 td {
-  background-color: #faf5ff !important;
+  background-color: #F9F9F9 !important;
 }
 
 :deep(.el-table .bg-color-6 td),
 :deep(.el-table tbody .bg-color-6 td),
 :deep(.custom-table .bg-color-6 td),
 .bg-color-6 td {
-  background-color: #f0fdfa !important;
+  background-color: #F2F4F6 !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-1:hover) {
-  background-color: #e0f2fe !important;
+  background-color: #E9ECEF !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-2:hover) {
-  background-color: #dcfce7 !important;
+  background-color: #E2E6EA !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-3:hover) {
-  background-color: #fef9c3 !important;
+  background-color: #EAEAEA !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-4:hover) {
-  background-color: #fee2e2 !important;
+  background-color: #F0F0F0 !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-5:hover) {
-  background-color: #f3e8ff !important;
+  background-color: #EFEFEF !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-6:hover) {
-  background-color: #ccfbf1 !important;
+  background-color: #E5E8EB !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-1:hover td) {
-  background-color: #e0f2fe !important;
+  background-color: #E9ECEF !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-2:hover td) {
-  background-color: #dcfce7 !important;
+  background-color: #E2E6EA !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-3:hover td) {
-  background-color: #fef9c3 !important;
+  background-color: #EAEAEA !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-4:hover td) {
-  background-color: #fee2e2 !important;
+  background-color: #F0F0F0 !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-5:hover td) {
-  background-color: #f3e8ff !important;
+  background-color: #EFEFEF !important;
 }
 
 .custom-table :deep(.el-table tbody tr.bg-color-6:hover td) {
-  background-color: #ccfbf1 !important;
+  background-color: #E5E8EB !important;
 }
 
 .custom-table .el-table th {
