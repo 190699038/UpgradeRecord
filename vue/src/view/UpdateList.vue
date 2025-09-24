@@ -15,6 +15,7 @@
       <el-button type="primary" @click="fetchRecords">查询</el-button>
       <el-button  type="primary" @click="copyYesterdayContent">复制昨日上线内容</el-button>
       <el-button type="primary" @click="copyScreenshot" style="margin-left: 8px">复制截图</el-button>
+      <el-button type="success" @click="exportToExcel" style="margin-left: 8px">导出到Excel</el-button>
 
     </div>
 
@@ -162,6 +163,7 @@ import html2canvas from 'html2canvas';
 // import ImageDropAndPaste from 'quill-image-drop-and-paste'
 // QuillEditor.Quill.register('modules/imageDropAndPaste', ImageDropAndPaste)
 import { ElMessage } from 'element-plus'
+import { exportUpdateListToExcel } from '@/utils/excelExporterUpdateList'
 
 const myQuillEditor = ref(null)
 
@@ -232,6 +234,8 @@ const countryOptions = ref([
   { value: 'ALL', label: '所有' },  
   { value: 'US', label: '美国1' },
   { value: 'US2', label: '美国2' },
+    { value: 'US3', label: '美国3' },
+
   { value: 'BR', label: '巴西1' },
   { value: 'BR2', label: '巴西2' },
   { value: 'MX', label: '墨西哥' },
@@ -724,10 +728,10 @@ const copyScreenshot = async () => {
     
     // 克隆整个表格结构
     // 计算前四列总宽度
-    const originalHeaders = Array.from(originalTable.querySelectorAll('th')).slice(0, 3);
+    const originalHeaders = Array.from(originalTable.querySelectorAll('th')).slice(0, 5);
     let totalWidth = originalHeaders.reduce((sum, header) => sum + header.offsetWidth, 0);
-    if(totalWidth > 1100) {
-      totalWidth = 1100
+    if(totalWidth < 1900) {
+      totalWidth = 1900
     }
 
     // 克隆并调整表格结构
@@ -791,7 +795,18 @@ const copyScreenshot = async () => {
     ElMessage.error('截图失败: ' + (err.message || '不支持的浏览器'));
   }
 };
-
+const exportToExcel = () => {
+  const title = '每日升级记录'
+  const headers = ['序号', '国家', '内容', '更新时间', '影响范围']
+  const data = tableData.value.map((item, index) => ({
+    id: index + 1,
+    country: item.country,
+    content: item.content,
+    update_time: item.update_time,
+    impact: item.impact
+  }))
+  exportUpdateListToExcel(data, title, headers)
+}
 
 </script>
 
@@ -894,4 +909,7 @@ const copyScreenshot = async () => {
   background-color: #e0e0e0;
 }
 </style>
+
+
+
 
