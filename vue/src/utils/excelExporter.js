@@ -1,110 +1,105 @@
-import ExcelJS from 'exceljs';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 export const exportTaskToExcel = (data, title) => {
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('关键任务');
+  const worksheetData = [];
 
   // 标题行
-  const titleRow = worksheet.addRow([title]);
-  worksheet.mergeCells('A1:D1');
-  
-  // 集中设置合并单元格样式
-  const titleCell = worksheet.getCell('A1');
-  titleCell.font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
-  titleCell.fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FF0070C0' }
-  };
-  titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
-  titleCell.border = {
-    top: { style: 'thin' },
-    left: { style: 'thin' },
-    bottom: { style: 'thin' },
-    right: { style: 'thin' }
-  };
-  
+  worksheetData.push([title, '']); // Add title to the data array
 
   // 表头
-  const headerRow = worksheet.addRow(['序号', '当日结论']);
-  // 仅在前四列应用样式
-  ['A2', 'B2'].forEach(cellAddress => {
-    const cell = worksheet.getCell(cellAddress);
-    cell.font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF0070C0' }
-    };
-    cell.alignment = { vertical: 'middle', horizontal: 'center' };
-  });
+  const headers = ['序号', '当日结论'];
+  worksheetData.push(headers);
 
   // 数据行
   data.forEach((item, index) => {
-    let content = item.conclusion.replace('</', '\n\t</') 
-    let conclusion = content ? new DOMParser().parseFromString(content, 'text/html').body.textContent || '' : ''
-    const row = worksheet.addRow([
+    let content = item.conclusion.replace('</', '\n\t</');
+    let conclusion = content ? new DOMParser().parseFromString(content, 'text/html').body.textContent || '' : '';
+    worksheetData.push([
       item.id,
       conclusion
     ]);
+  });
 
-    // 交替行颜色
-    if (index % 2 === 0) {
-      row.eachCell(cell => {
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FFF2F2F2' }
-        };
-      });
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+  // 合并标题单元格
+  if (!worksheet['!merges']) worksheet['!merges'] = [];
+  worksheet['!merges'].push(XLSX.utils.decode_range('A1:B1'));
+
+  // 标题样式
+  const titleCell = worksheet['A1'];
+  if (titleCell) {
+    if (!titleCell.s) titleCell.s = {};
+    titleCell.s.font = { bold: true, sz: 14, color: { rgb: 'FFFFFFFF' } };
+    titleCell.s.fill = { fgColor: { rgb: 'FF0070C0' } };
+    titleCell.s.alignment = { vertical: 'center', horizontal: 'center' };
+    titleCell.s.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+  }
+
+  // 表头样式
+  headers.forEach((header, colIndex) => {
+    const cellAddress = XLSX.utils.encode_cell({ r: 1, c: colIndex }); // Header row is 1 (0-indexed array, but 1-indexed in Excel)
+    const cell = worksheet[cellAddress];
+    if (cell) {
+      if (!cell.s) cell.s = {};
+      cell.s.font = { bold: true, sz: 14, color: { rgb: 'FFFFFFFF' } };
+      cell.s.fill = { fgColor: { rgb: 'FF0070C0' } };
+      cell.s.alignment = { vertical: 'center', horizontal: 'center' };
     }
+  });
 
-    row.eachCell(cell => {
+  // 设置列宽
+  worksheet['!cols'] = [
+    { wch: 15 }, // 序号
+    { wch: 100 }  // 当日结论
+  ];
+
+  // 数据行样式和自动换行
+  for (let R = 2; R < worksheetData.length; ++R) { // Start from 2 to skip title and header rows
+    const item = data[R - 2]; // Adjust index for data array
+    for (let C = 0; C < headers.length; ++C) {
+      const cellref = XLSX.utils.encode_cell({ r: R, c: C });
+      if (!worksheet[cellref]) worksheet[cellref] = {};
+      if (!worksheet[cellref].s) worksheet[cellref].s = {};
+
       // 状态条件样式
       if (item.status === '已完成') {
-        cell.font = { size: 12, strike: true };
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FFE6FFE6' }
-        };
+        worksheet[cellref].s.font = { sz: 12, strike: true };
+        worksheet[cellref].s.fill = { fgColor: { rgb: 'FFE6FFE6' } };
       } else {
-        cell.font = { size: 12 };
+        worksheet[cellref].s.font = { sz: 12 };
       }
-      cell.alignment = { 
-        wrapText: true, 
-        vertical: 'middle',
-        horizontal: cell.col === 1 || cell.col === 3 ? 'center' : 'left'
+
+      worksheet[cellref].s.alignment = {
+        wrapText: true,
+        vertical: 'center',
+        horizontal: C === 0 ? 'center' : 'left' // 序号居中
       };
-      cell.border = {
+
+      worksheet[cellref].s.border = {
         top: { style: 'thin' },
         left: { style: 'thin' },
         bottom: { style: 'thin' },
         right: { style: 'thin' }
       };
-    });
-  });
 
-  // 设置行高和列宽
-  worksheet.columns = [
-    { width: 15 }, // 序号
-    { width: 500 }  // 当日结论
-  ];
+      // 交替行颜色
+      if ((R - 2) % 2 === 0) { // (R-2) because data starts from R=2
+        worksheet[cellref].s.fill = { fgColor: { rgb: 'FFF2F2F2' } };
+      }
+    }
+  }
 
-  worksheet.eachRow(row => {
-    const maxLines = row.values.reduce((max, cell) => {
-      const cellLines = (cell?.toString() || '').split('\n').length;
-      return Math.max(max, cellLines);
-    }, 1);
-    row.height = maxLines * 20;
-  });
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, '关键任务');
 
-  // 生成文件
-  workbook.xlsx.writeBuffer().then(buffer => {
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `关键任务_${new Date().toISOString().slice(0,10)}.xlsx`;
-    link.click();
-  });
+  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+  saveAs(blob, `关键任务_${new Date().toISOString().slice(0,10)}.xlsx`);
 };

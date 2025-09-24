@@ -125,10 +125,13 @@ import { ElMessageBox,ElMessage } from 'element-plus';
 import { QuillEditor ,Quill} from '@vueup/vue-quill'
 import Delta from 'quill-delta';
 import html2canvas from 'html2canvas';
+import { exportUpdateListToExcel } from '../utils/excelExporterUpdateList';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 import api from '../utils/api'
 import { id } from 'element-plus/es/locales.mjs';
-import ExcelJS from 'exceljs';
+
 const editorInstance = ref(null)
 
 const tableData = ref([])
@@ -433,116 +436,105 @@ const insertImageToEditor = (url) => {
 
 const exportToExcel = async () => {
   try {
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('评审记录');
+    const worksheetData = [];
 
     // 设置列标题
     const headers = ['序号', '日期', '发起人', '参与人', '目的', '结论', '下一步', '有价值', '价值体现'];
-    worksheet.addRow(headers);
+    worksheetData.push(headers);
 
-    // 设置标题行样式
-    const headerRow = worksheet.getRow(1);
-    headerRow.eachCell((cell) => {
-      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-      cell.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FF0070C0' }
-      };
-      cell.alignment = { vertical: 'middle', horizontal: 'center' };
-      cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' }
-      };
-    });
+    // 数据行
+    tableData.value.forEach(item => {
+      let conclusionContent = item.conclusion ? new DOMParser().parseFromString(item.conclusion, 'text/html').body.textContent || '' : '';
+      let nextStepContent = item.next_step ? new DOMParser().parseFromString(item.next_step, 'text/html').body.textContent || '' : '';
+      let valueContent = item.value_embodiment ? new DOMParser().parseFromString(item.value_embodiment, 'text/html').body.textContent || '' : '';
 
-    // 添加数据行
-    tableData.value.forEach((item, index) => {
-      // 解析HTML内容为纯文本，保留换行符
-       const parseHtmlToText = (html) => {
-         if (!html) return '';
-         const div = document.createElement('div');
-         div.innerHTML = html;
-         // 将<p>、<br>、<div>等标签转换为换行符
-         let text = html.replace(/<\/p>/gi, '\n')
-                       .replace(/<br\s*\/?>/gi, '\n')
-                       .replace(/<\/div>/gi, '\n')
-                       .replace(/<p[^>]*>/gi, '')
-                       .replace(/<div[^>]*>/gi, '')
-                       .replace(/<[^>]*>/g, '') // 移除其他HTML标签
-                       .replace(/&nbsp;/g, ' ') // 替换HTML空格
-                       .replace(/\n\s*\n/g, '\n') // 合并多个连续换行
-                       .trim();
-         return text;
-       };
-
-      const row = worksheet.addRow([
-        index + 1, // 序号
-        item.date || '', // 日期
-        item.initiator || '', // 发起人
-        item.participants || '', // 参与人
-        item.purpose || '', // 目的
-        parseHtmlToText(item.conclusion) || '', // 结论（转换为纯文本）
-        item.next_step || '', // 下一步
-        (item.valuable == 1) ? '有价值' : (item.valuable == 0) ? '无价值' : '常规会议', // 有价值
-        item.value_content || '' // 价值体现
+      worksheetData.push([
+        item.id,
+        item.date,
+        item.initiator,
+        item.participants,
+        item.purpose,
+        conclusionContent,
+        nextStepContent,
+        item.is_valuable ? '是' : '否',
+        valueContent
       ]);
-
-      // 设置数据行样式
-       row.eachCell((cell, colNumber) => {
-         cell.border = {
-           top: { style: 'thin' },
-           left: { style: 'thin' },
-           bottom: { style: 'thin' },
-           right: { style: 'thin' }
-         };
-         
-         // 根据列设置不同的对齐方式
-          if (colNumber <= 3 || colNumber === 8) { // 序号、日期、发起人、有价值 居中对齐
-            cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-          } else { // 其他列 垂直居中
-            cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
-          }
-        });
-        
-        // 设置行高自适应
-        const maxLines = Math.max(
-          1,
-          (item.purpose || '').split('\n').length,
-          // (parseHtmlToText(item.conclusion) || '').split('\n').length,
-          (item.next_step || '').split('\n').length,
-          (item.value_content || '').split('\n').length
-        );
-        row.height = Math.max(20, maxLines * 19); // 基础高度20，每行增加15
     });
 
-    // 自动调整列宽
-    worksheet.columns.forEach((column, index) => {
-      if (index === 0) column.width = 8; // 序号列
-      else if (index === 1) column.width = 15; // 日期列
-      else if (index === 4) column.width = 40; // 目的列
-      else if (index === 5) column.width = 125; // 结论列
-      else if (index === 6 || index === 8) column.width = 30; // 下一步、价值体现列
-      else if (index === 7) column.width = 12; // 有价值列
-      else column.width = 20; // 其他列
+  const wscols = headers.map(header => {
+    const col = { wch: 50 }; // Default width
+    if (header === '结论') {
+      col.width = 200; // Adjust width for content column if needed
+    }
+    return col;
+  });
+
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+    // 设置列宽
+    worksheet['!cols'] = [
+      { wch: 10 }, // 序号
+      { wch: 15 }, // 日期
+      { wch: 15 }, // 发起人
+      { wch: 15 }, // 参与人
+      { wch: 30 }, // 目的
+      { wch: 50 }, // 结论
+      { wch: 50 }, // 下一步
+      { wch: 10 }, // 有价值
+      { wch: 30 }  // 价值体现
+    ];
+
+    // 设置表头样式和自动换行
+    headers.forEach((header, colIndex) => {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: colIndex }); // Header row is 0 (0-indexed array)
+      const cell = worksheet[cellAddress];
+      if (cell) {
+        if (!cell.s) cell.s = {};
+        cell.s.font = { bold: true, sz: 14, color: { rgb: 'FFFFFFFF' } };
+        cell.s.fill = { fgColor: { rgb: 'FF0070C0' } };
+        cell.s.alignment = { vertical: 'center', horizontal: 'center', wrapText: true };
+      }
     });
 
-    // 生成文件并下载
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `评审记录_${new Date().toISOString().split('T')[0]}.xlsx`;
-    link.click();
-    window.URL.revokeObjectURL(url);
+    // 数据行样式和自动换行
+    for (let R = 1; R < worksheetData.length; ++R) { // Start from 1 to skip header row
+      for (let C = 0; C < headers.length; ++C) {
+        const cellref = XLSX.utils.encode_cell({ r: R, c: C });
+        if (!worksheet[cellref]) worksheet[cellref] = {};
+        if (!worksheet[cellref].s) worksheet[cellref].s = {};
 
-    ElMessage.success('Excel文件导出成功');
+        worksheet[cellref].s.alignment = {
+          wrapText: true,
+          vertical: 'top',
+          horizontal: 'left'
+        };
+
+        worksheet[cellref].s.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+
+        // 交替行颜色
+        if (R % 2 === 0) { // Even rows (data rows start from R=1)
+          worksheet[cellref].s.fill = { fgColor: { rgb: 'FFF2F2F2' } };
+        }
+      }
+    }
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, '评审记录');
+
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(blob, `评审记录_${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+    ElMessage.success('导出成功');
   } catch (error) {
     console.error('导出Excel失败:', error);
-    ElMessage.error('导出Excel失败: ' + error.message);
+    ElMessage.error('导出Excel失败');
   }
 };
 

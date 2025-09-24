@@ -1,17 +1,11 @@
-import ExcelJS from 'exceljs';
+import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
 export const exportUpdateListToExcel = (data, title, headers) => {
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet(title);
+  const worksheetData = [headers];
 
-  // 设置表头
-  worksheet.addRow(headers);
-
-  // 设置数据行
   data.forEach(item => {
     const rowData = headers.map(header => {
-      // 根据表头映射数据
       switch (header) {
         case '序号': return item.id;
         case '国家': return item.country;
@@ -21,18 +15,36 @@ export const exportUpdateListToExcel = (data, title, headers) => {
         default: return '';
       }
     });
-    worksheet.addRow(rowData);
+    worksheetData.push(rowData);
   });
+
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
   // 设置列宽
-  worksheet.columns = headers.map(header => ({
-    header,
-    width: 20,
-  }));
-
-  // 生成Excel文件并下载
-  workbook.xlsx.writeBuffer().then(buffer => {
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    saveAs(blob, `${title}.xlsx`);
+  const wscols = headers.map(header => {
+    const col = { wch: 30 }; // Default width
+    if (header === '内容') {
+      col.width = 150; // Adjust width for content column if needed
+    }
+    return col;
   });
+  worksheet['!cols'] = wscols;
+
+  // 设置内容列的自动换行
+  for (let R = 1; R < worksheetData.length; ++R) { // Start from 1 to skip header row
+    for (let C = 0; C < headers.length; ++C) {
+      if (headers[C] === '内容') {
+        const cellref = XLSX.utils.encode_cell({ r: R, c: C });
+        if (!worksheet[cellref]) worksheet[cellref] = {};
+        worksheet[cellref].s = { alignment: { wrapText: true } };
+      }
+    }
+  }
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, title);
+
+  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+  saveAs(blob, `${title}.xlsx`);
 };
