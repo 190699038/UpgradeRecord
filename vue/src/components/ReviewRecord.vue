@@ -442,11 +442,26 @@ const exportToExcel = async () => {
     const headers = ['序号', '日期', '发起人', '参与人', '目的', '结论', '下一步', '有价值', '价值体现'];
     worksheetData.push(headers);
 
+    // Helper function to convert HTML to plain text, preserving newlines
+    const parseHtmlToText = (html) => {
+      if (!html) return '';
+      let text = html.replace(/<\/p>/gi, '\n')
+                    .replace(/<br\s*\/?>/gi, '\n')
+                    .replace(/<\/div>/gi, '\n')
+                    .replace(/<p[^>]*>/gi, '')
+                    .replace(/<div[^>]*>/gi, '')
+                    .replace(/<[^>]*>/g, '') // Remove other HTML tags
+                    .replace(/&nbsp;/g, ' ') // Replace HTML non-breaking space
+                    .replace(/\n\s*\n/g, '\n') // Merge multiple consecutive newlines
+                    .trim();
+      return text;
+    };
+
     // 数据行
     tableData.value.forEach(item => {
-      let conclusionContent = item.conclusion ? new DOMParser().parseFromString(item.conclusion, 'text/html').body.textContent || '' : '';
-      let nextStepContent = item.next_step ? new DOMParser().parseFromString(item.next_step, 'text/html').body.textContent || '' : '';
-      let valueContent = item.value_embodiment ? new DOMParser().parseFromString(item.value_embodiment, 'text/html').body.textContent || '' : '';
+      let conclusionContent = parseHtmlToText(item.conclusion);
+      let nextStepContent = parseHtmlToText(item.next_step);
+      let valueContent = parseHtmlToText(item.value_embodiment);
 
       worksheetData.push([
         item.id,
