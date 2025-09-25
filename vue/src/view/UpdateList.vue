@@ -36,17 +36,17 @@
         </template>
       </el-table-column>
 
-      <el-table-column prop="impact" label="影响范围" header-align="center" align="center" width="200"/>
-      <el-table-column prop="updater" label="研发" header-align="center" align="center" width="100"
+      <el-table-column prop="impact" label="影响范围" header-align="center" align="center" width="150"/>
+      <el-table-column prop="updater" label="研发" header-align="center" align="center" width="200"
         show-overflow-tooltip />
       <el-table-column prop="update_time" label="更新时间" header-align="center" align="center" width="200" />
-      <el-table-column prop="type" label="类型" header-align="center" align="center" width="90" />
-      <el-table-column prop="platform" label="平台" header-align="center" align="center" width="60" />
-      <el-table-column prop="tester" label="测试" header-align="center" align="center" width="100"
+      <!-- <el-table-column prop="type" label="类型" header-align="center" align="center" width="90" /> -->
+      <!-- <el-table-column prop="platform" label="平台" header-align="center" align="center" width="60" /> -->
+      <el-table-column prop="tester" label="测试" header-align="center" align="center" width="200"
         show-overflow-tooltip />
 
-      <el-table-column prop="is_review" label="复盘" header-align="center" align="center" width="100"
-        show-overflow-tooltip :formatter="formatReview" />
+      <!-- <el-table-column prop="is_review" label="复盘" header-align="center" align="center" width="100"
+        show-overflow-tooltip :formatter="formatReview" /> -->
 
       <el-table-column prop="remark" label="备注" header-align="center" align="center" width="100"
         show-overflow-tooltip />
@@ -72,17 +72,17 @@
       </template>
       <el-form :model="formData" :rules="formRules" ref="formRef" label-width="80px">
         <el-form-item label="国家" prop="country" l>
-          <el-select v-model="formData.country">
+          <el-select v-model="formData.country" multiple>
             <el-option v-for="country in countryOptions" :key="country.value" :label="country.label"
               :value="country.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="类型" prop="type">
+        <el-form-item label="类型" prop="type"  v-show="false">
           <el-select v-model="formData.type">
             <el-option v-for="type in typeOptions" :key="type.value" :label="type.label" :value="type.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="平台" prop="platform">
+        <el-form-item label="平台" prop="platform" v-show="false">
           <el-select v-model="formData.platform">
             <el-option v-for="platform in platformOptions" :key="platform.value" :label="platform.label"
               :value="platform.value" />
@@ -95,7 +95,7 @@
           <el-input v-model="formData.impact"  placeholder="请输入影响范围" />
         </el-form-item>
         
-        <el-form-item label="复盘" prop="platform">
+        <el-form-item label="复盘" prop="platform" v-show="false">
           <el-select v-model="formData.is_review">
             <el-option v-for="platform in is_review_options" :key="platform.value" :label="platform.label"
               :value="platform.value" />
@@ -234,7 +234,7 @@ const countryOptions = ref([
   { value: 'ALL', label: '所有' },  
   { value: 'US', label: '美国1' },
   { value: 'US2', label: '美国2' },
-    { value: 'US3', label: '美国3' },
+  { value: 'US3', label: '美国3' },
 
   { value: 'BR', label: '巴西1' },
   { value: 'BR2', label: '巴西2' },
@@ -245,8 +245,7 @@ const countryOptions = ref([
   { value: 'CA', label: '加拿大' },
 
   { value: 'PH', label: '菲律宾' },
-  { value: 'OA', label: 'OA' }
-
+  { value: 'OA', label: 'OA' },
 ])
 const typeOptions = ref([
   { value: '新功能', label: '新功能' },
@@ -460,11 +459,21 @@ const submitForm = async () => {
   const url = dialogType.value === 'create'
     ? '/api.php?table=upgrade_record&action=create'
     : `/api.php?table=upgrade_record&action=update&id=${formData.value.id}`
-  const submitData = {
-    ...formData.value,
+
+
+  let countrys = formData.value.country;
+  for(let country of countrys){
+    // 新建一个字典，深拷贝formData.value
+    let newFormData = {...formData.value};
+    newFormData.country = country;
+    const submitData = {
+    ...newFormData,
     tester: formData.value.tester.join('、'),
     updater: formData.value.updater.join('、'),
-    update_time: formData.value.update_time
+    update_time: formData.value.update_time,
+    type:'新功能',
+    platform:'前后端',
+    is_review:0
   }
   try {
     api[method](url, submitData)
@@ -475,6 +484,10 @@ const submitForm = async () => {
   } catch (error) {
     console.error('提交表单失败:', error);
   }
+  }
+  
+
+
 }
 
 const handleDelete = async (row) => {
@@ -638,9 +651,11 @@ const parseContent = (text) => {
   }
 
   // 国家匹配
-  formData.value.country = countryOptions.value.find(
+  const countryTmp = countryOptions.value.find(
     opt => opt.label === extractField(patterns.country, text)
   )?.value || extractField(patterns.country, text)
+
+  formData.value.country = [countryTmp]
 
 
 
@@ -700,7 +715,7 @@ const parseContent = (text) => {
   }
 
   // 测试人员模糊匹配
-  const testerNames = extractField(patterns.tester, text).split(/[、,]/)
+  const testerNames = extractField(patterns.tester, text).split(/[、,，]/)
   if (testerNames.length) {
     formData.value.tester = testerNames
       .flatMap(name =>
