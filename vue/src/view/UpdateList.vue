@@ -72,7 +72,7 @@
       </template>
       <el-form :model="formData" :rules="formRules" ref="formRef" label-width="80px">
         <el-form-item label="国家" prop="country" l>
-          <el-select v-model="formData.country" multiple>
+          <el-select v-model="formData.country" multiple @change="handleCountryChange">
             <el-option v-for="country in countryOptions" :key="country.value" :label="country.label"
               :value="country.value" />
           </el-select>
@@ -246,7 +246,25 @@ const countryOptions = ref([
 
   { value: 'PH', label: '菲律宾' },
   { value: 'OA', label: 'OA' },
+  { value: 'pay_br_all', label: '巴西1、2' },
+  { value: 'pay_in_phi', label: '印度、菲律宾' },
+  { value: 'pay_other_all', label: '美国1、美国2、美国3、墨西哥、智利、加拿大、秘鲁' },
+
+
+
 ])
+
+const handleCountryChange = (selectedCountries) => {
+  console.log('Selected Countries:', selectedCountries);
+  // 在这里添加根据选择的国家生成三条数据的逻辑
+  if(selectedCountries.includes('pay_br_all')){
+    formData.value.impact = '巴西1、巴西2'
+  }else if(selectedCountries.includes('pay_in_phi')){
+    formData.value.impact = '印度、菲律宾'
+  }else if(selectedCountries.includes('pay_other_all')){
+    formData.value.impact = '美国1、美国2、美国3、墨西哥、智利、加拿大、秘鲁'
+  }
+};
 const typeOptions = ref([
   { value: '新功能', label: '新功能' },
   { value: '新游戏', label: '新游戏' },
@@ -463,27 +481,27 @@ const submitForm = async () => {
 
   let countrys = formData.value.country;
   for(let country of countrys){
-    // 新建一个字典，深拷贝formData.value
-    let newFormData = {...formData.value};
-    newFormData.country = country;
-    const submitData = {
-    ...newFormData,
-    tester: formData.value.tester.join('、'),
-    updater: formData.value.updater.join('、'),
-    update_time: formData.value.update_time,
-    type:'新功能',
-    platform:'前后端',
-    is_review:0
-  }
-  try {
-    api[method](url, submitData)
-    dialogVisible.value = false
-    setTimeout(() => {
-      fetchRecords()
-    }, 1000)
-  } catch (error) {
-    console.error('提交表单失败:', error);
-  }
+// 新建一个字典，深拷贝formData.value
+      let newFormData = {...formData.value};
+      newFormData.country = country;
+      const submitData = {
+      ...newFormData,
+      tester: formData.value.tester.join('、'),
+      updater: formData.value.updater.join('、'),
+      update_time: formData.value.update_time,
+      type:'新功能',
+      platform:'前后端',
+      is_review:0
+    }
+    try {
+      api[method](url, submitData)
+      dialogVisible.value = false
+      setTimeout(() => {
+        fetchRecords()
+      }, 1000)
+    } catch (error) {
+      console.error('提交表单失败:', error);
+    }
   }
   
 
