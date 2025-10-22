@@ -33,7 +33,9 @@
       <el-button type="primary" @click="fetchRecords">查询</el-button>
       <el-button type="primary" @click="copyYesterdayTasks">拷贝昨日任务</el-button>
       <el-button type="success" @click="captureAndCopyTable">截图并复制</el-button>
-      <el-button type="warning" @click="copyRichText">复制富文本</el-button>
+      <!-- <el-button type="warning" @click="copyRichText">复制富文本</el-button> -->
+        <el-button type="warning" v-show="showSendDD()" @click="sendToDingding">发送到钉钉</el-button>
+
 
     </div>
 
@@ -58,12 +60,17 @@
           <div class="wrap-cell parent-task-content">{{ row.parent_task_content }}</div>
         </template>
       </el-table-column>
+      <el-table-column prop="target" label="目标" header-align="center" width="200">
+        <template #default="{ row }">
+          <div class="target-content">{{ row.target }}</div>
+        </template>
+      </el-table-column>
       <el-table-column prop="sub_task_content" label="子任务内容" header-align="center" width="450">
         <template #default="{ row }">
           <div class="wrap-cell sub-task-content">{{ row.sub_task_content }}</div>
         </template>
       </el-table-column>
-      <el-table-column prop="sub_completion_status" label="完成状态" header-align="center" align="center" width="100">
+      <!-- <el-table-column prop="sub_completion_status" label="完成状态" header-align="center" align="center" width="100">
         <template #default="{ row }">
           <span :style="{ 
             color: parseInt(row.sub_completion_status) === 1 ? '#67c23a' : '#909399',
@@ -75,7 +82,7 @@
             {{ parseInt(row.sub_completion_status) === 1 ? '已完成' : '未完成' }}
           </span>
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column prop="executor" label="执行人" header-align="center" align="center" width="100" />
     </el-table>
 
@@ -91,6 +98,11 @@
           <div class="wrap-cell parent-task-content">{{ row.parent_task_content }}</div>
         </template>
       </el-table-column>
+      <el-table-column prop="target" label="目标" header-align="center" width="200">
+        <template #default="{ row }">
+          <div class="target-content">{{ row.target }}</div>
+        </template>
+      </el-table-column>
       <el-table-column prop="sub_task_content" label="子任务内容" header-align="center">
         <template #default="{ row }">
           <div class="wrap-cell sub-task-content">{{ row.sub_task_content }}</div>
@@ -104,13 +116,13 @@
         </template>
       </el-table-column>
       <el-table-column prop="executor" label="执行人" header-align="center" align="center" width="100" />
-      <el-table-column prop="remark" label="备注" header-align="center" width="200">
+      <!-- <el-table-column prop="remark" label="备注" header-align="center" width="200">
         <template #default="{ row }">
           <div class="wrap-cell">{{ row.remark }}</div>
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column prop="creation_date" label="创建日期" header-align="center" align="center" width="120" />
-      <el-table-column prop="end_date" label="结束日期" header-align="center" align="center" width="120" />
+      <!-- <el-table-column prop="end_date" label="结束日期" header-align="center" align="center" width="120" /> -->
       <el-table-column label="操作" width="220" header-align="center" align="center">
         <template #default="scope">
           <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
@@ -131,6 +143,9 @@
               :value="item.id"
             />
           </el-select>
+        </el-form-item>
+        <el-form-item label="目标" prop="target">
+          <el-input v-model="formData.target" placeholder="请输入目标" />
         </el-form-item>
         <el-form-item label="子任务内容" prop="sub_task_content">
           <el-input
@@ -307,6 +322,40 @@ const handleMainTaskChange = (value) => {
   }
 }
 
+
+const showSendDD = () => {
+  return selectedTaskIds.value.length == 1 && selectedTaskIds.value.includes('all') === false
+}
+
+const sendToDingding = async () => {
+  try {
+    // 检查是否有选中的子任务
+    if (!showSendDD()) {
+      ElMessage.warning('请选择要发送的唯一子任务')
+      return
+    }
+
+    let parent_task_id = selectedTaskIds.value[0]
+    let main_task_content = ''
+    for(let item of mainTasks.value){
+      if(item.id == parent_task_id){
+        main_task_content = item.task_content
+        break
+      }
+    }
+    
+
+    const response = await api.post('/api.php?table=follow_up_sub_tasks&action=sendDingTalkText', {
+      main_task_content: main_task_content,parent_task_id:parent_task_id
+    })
+    ElMessage.success('发送到钉钉成功')
+  } catch (error) {
+    console.error('发送到钉钉失败:', error)
+    ElMessage.error('发送到钉钉失败')
+  }
+}
+
+
 const fetchRecords = async () => {
   try {
     // 构建查询参数
@@ -347,6 +396,7 @@ const formRules = ref({
 const formData = ref({
   id: 0,
   parent_task_id: '',
+  target:'',
   sub_task_content: '',
   sub_completion_status: 0,
   executor: '',
@@ -484,19 +534,24 @@ onMounted(() => {
 
 // 根据主任务ID返回行样式
 const getRowStyle = ({ row }) => {
-  const taskId = row.parent_task_id
-  const colors = [
-    '#FFF0E6F9', // Light Peach
-    '#E6FFF079', // Light Mint
-    '#F0E6FF59', // Light Lavender
-    '#E6F0FF59', // Light Sky Blue
-    '#FFE6F059', // Light Rose
-    '#FFFBE659'  // Light Cream
-  ]
-  const colorIndex = taskId % colors.length
+  // const taskId = row.parent_task_id
+  // const colors = [
+  //   '#FFF0E6F9', // Light Peach
+  //   '#E6FFF079', // Light Mint
+  //   '#F0E6FF59', // Light Lavender
+  //   '#E6F0FF59', // Light Sky Blue
+  //   '#FFE6F059', // Light Rose
+  //   '#FFFBE659'  // Light Cream
+  // ]
+  // const colorIndex = taskId % colors.length
+  // return {
+  //   backgroundColor: colors[colorIndex]
+  // }
+
   return {
-    backgroundColor: colors[colorIndex]
+    backgroundColor: ''
   }
+
 }
 
 // 截图并复制到剪贴板
@@ -955,19 +1010,29 @@ defineExpose({
 
 .parent-task-content {
   color: #2c5aa0;
-  font-weight: 600;
+  font-weight: 500;
   /* background-color: #f0f4f8; */
   border-radius: 4px;
   padding: 4px 8px;
-  font-size: medium;
+  font-size: 16px;
+}
+
+
+.target-content {
+  font-size: 1em;
+  font-style: normal;
+  color: #2c3e50;
+  font-weight: 500;
+  line-height: 1.6;
+  white-space: pre-wrap;
 }
 
 .sub-task-content {
   font-size: 1em;
   font-style: normal;
   color: #2c3e50;
-  font-weight: 500;
-  line-height: 1.6;
+  font-weight: 300;
+  line-height: 1.5;
   white-space: pre-wrap;
 }
 </style>
