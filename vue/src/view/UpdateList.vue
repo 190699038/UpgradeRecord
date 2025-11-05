@@ -39,7 +39,9 @@
       <el-table-column prop="impact" label="影响范围" header-align="center" align="center" width="150"/>
       <el-table-column prop="updater" label="研发" header-align="center" align="center" width="200"
         show-overflow-tooltip />
-      <el-table-column prop="update_time" label="更新时间" header-align="center" align="center" width="200" />
+      <el-table-column prop="update_time" label="更新时间(北京)" header-align="center" align="center" width="200" />
+       <el-table-column prop="update_time_out" label="更新时间(当地)" header-align="center" align="center" width="200" />
+     
       <!-- <el-table-column prop="type" label="类型" header-align="center" align="center" width="90" /> -->
       <!-- <el-table-column prop="platform" label="平台" header-align="center" align="center" width="60" /> -->
       <el-table-column prop="tester" label="测试" header-align="center" align="center" width="200"
@@ -48,8 +50,8 @@
       <!-- <el-table-column prop="is_review" label="复盘" header-align="center" align="center" width="100"
         show-overflow-tooltip :formatter="formatReview" /> -->
 
-      <el-table-column prop="remark" label="备注" header-align="center" align="center" width="100"
-        show-overflow-tooltip />
+      <!-- <el-table-column prop="remark" label="备注" header-align="center" align="center" width="100"
+        show-overflow-tooltip /> -->
 
       <el-table-column label="操作" width="150" header-align="center" align="center">
         <template #default="scope">
@@ -57,7 +59,7 @@
           <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
           <el-button size="small" style="margin-top: 3px;" v-if="scope.row.is_review == 1"
             @click="review(scope.row)">查看复盘</el-button>
-
+          <el-button size="small" type="primary" style="margin-top: 3px;" @click="sendMessageToGroup(scope.row)">发送到群</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -112,9 +114,18 @@
             <el-option v-for="dev in develops" :key="dev.id" :label="dev.username" :value="dev.username" />
           </el-select>
         </el-form-item>
-        <el-form-item label="更新时间" prop="update_time">
+        <el-form-item label="时间(北京)" prop="update_time">
           <el-date-picker
             v-model="formData.update_time"
+            type="datetime"
+            placeholder="选择更新时间"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="时间(当地)" prop="update_time_out">
+          <el-date-picker
+            v-model="formData.update_time_out"
             type="datetime"
             placeholder="选择更新时间"
             value-format="YYYY-MM-DD HH:mm:ss"
@@ -200,12 +211,14 @@ const formData = ref({
   tester: [],
   updater: [],
   update_time: '',
+  update_time_out: '',
   remark: '',
   impact:''
 })
 const formRules = ref({
   country: [{ required: true, message: '请选择国家', trigger: 'change' }],
-  update_time: [{ required: true, message: '请选择更新时间', trigger: 'change' }],
+  update_time: [{ required: true, message: '请选择更新时间(北京时间)', trigger: 'change' }],
+  update_time_out: [{ required: true, message: '请选择更新时间(海外)', trigger: 'change' }],
   content: [{
     required: true,
     message: '请输入升级内容',
@@ -448,6 +461,26 @@ const fetchReviewInfo = async () => {
   }
 }
 
+
+const sendMessageToGroup = async (row) => {
+  try {
+    // 调用API发送消息到群
+    await api.post('/api.php?table=upgrade_record&action=sendDingTalkText', {
+      id: row.id
+    });
+    ElMessage({
+      type: 'success',
+      message: '消息已成功发送到群！'
+    });
+  } catch (error) {
+    console.error('发送消息失败:', error);
+    ElMessage({
+      type: 'error',
+      message: '发送消息失败，请稍后重试'
+    });
+  }
+}; 
+
 const openDialog = (type, row) => {
   dialogType.value = type;
   dialogType.value === 'create' ? '新增记录' : '编辑记录'
@@ -489,6 +522,7 @@ const submitForm = async () => {
       tester: formData.value.tester.join('、'),
       updater: formData.value.updater.join('、'),
       update_time: formData.value.update_time,
+      update_time_out: formData.value.update_time_out,
       type:'新功能',
       platform:'前后端',
       is_review:0
@@ -657,6 +691,8 @@ const parseContent = (text) => {
     content: /【更新内容】[：:]([\s\S]*?)(?=ꔷ|\n【|$)/,
     country: /【地区】[：:]\s*([^\n]+)/,
     updateTime: /【上线时间（国内）[^】]*】[：:]\s*(\d{4})(\d{2})(\d{2})\s*(\d{2}[：:]\d{2})/, // 新增的正则表达式模式 //
+    updateTimeOut: /【上线时间（当地）[^】]*】[：:]\s*(\d{4})(\d{2})(\d{2})\s*(\d{2}[：:]\d{2})/, // 新增的正则表达式模式 //
+
     updater: /【开发人员[^】]*】[：:]\s*([^\n]+)/,
     tester: /【测试人员[^】]*】[：:]\s*([^\n]+)/,
     impact: /【影响范围[^】]*】[：:]\s*([^\n]+)/,
@@ -676,49 +712,8 @@ const parseContent = (text) => {
   formData.value.country = [countryTmp]
 
 
-
-  // 时间格式转换
-  const timeMatch = text.match(patterns.updateTime)
-  if (timeMatch) {
-    const [_, year, month, day, time] = timeMatch
-    formData.value.update_time = `${year}-${month}-${day} ${time}:00`
-    formData.value.update_time  = formData.value.update_time.replace(/：/g, ":")
-  }
-
-  if(formData.value.update_time == null || formData.value.update_time == ''){
-    const timePattern = /【上线时间（国内）】\s*[:：]\s*(\d{4}-\d{2}-\d{2})\s*(\d{1,2}[:：]\d{1,2}(?:[:：]\d{1,2})?)/i;
-    const matchResult = text.match(timePattern);
-    if(matchResult != null){
-      const datePart = matchResult[1];
-      let timePart = matchResult[2].replace(/：/g, ':');
-      // 如果时间部分没有秒数，则补全秒数
-      if(timePart.split(':').length === 2) {
-        timePart += ':00';
-      }
-      formData.value.update_time = `${datePart} ${timePart}`;
-    }
-    
-  }
-
-  if(formData.value.update_time == null || formData.value.update_time == ''){
-    // 匹配日期和时间部分，兼容多个空格和中文冒号
-    const domesticTimePattern = /【上线时间（国内）】\s*[:：]\s*(\d{4}-\d{2}-\d{2})\s*(\d{1,2}[:：]\d{1,2}(?:[:：]\d{1,2})?)/i;
-
-    // 执行匹配
-    const matchResult = text.match(domesticTimePattern);
-
-    if (matchResult) {
-        // 提取日期部分并替换可能的中文冒号为英文冒号
-        const datePart = matchResult[1];
-        const timePart = matchResult[2].replace('：', ':');
-        
-        // 补全秒数部分
-        formData.value.update_time = `${datePart} ${timePart}:00`;
-        
-    }
-    
-  }
-
+  formData.value.update_time = getConvertUpdateTime(patterns.updateTime,text,false)
+  formData.value.update_time_out = getConvertUpdateTime(patterns.updateTimeOut,text,true)
 
   // 开发人员模糊匹配
   const devNames = extractField(patterns.updater, text).split(/[、,]/)
@@ -752,6 +747,76 @@ const parseContent = (text) => {
   // platform.label = '否'
   formData.value.platform = '前端'
   formData.value.type='功能优化'
+
+}
+
+const getConvertUpdateTime = (pattern,text,isOut) =>{
+
+  const patterns = {
+    content: /【更新内容】[：:]([\s\S]*?)(?=ꔷ|\n【|$)/,
+    country: /【地区】[：:]\s*([^\n]+)/,
+    updateTime: /【上线时间（国内）[^】]*】[：:]\s*(\d{4})(\d{2})(\d{2})\s*(\d{2}[：:]\d{2})/, // 新增的正则表达式模式 //
+    updateTimeOut: /【上线时间（当地）[^】]*】[：:]\s*(\d{4})(\d{2})(\d{2})\s*(\d{2}[：:]\d{2})/, // 新增的正则表达式模式 //
+
+    updater: /【开发人员[^】]*】[：:]\s*([^\n]+)/,
+    tester: /【测试人员[^】]*】[：:]\s*([^\n]+)/,
+    impact: /【影响范围[^】]*】[：:]\s*([^\n]+)/,
+    remark: /【文档地址\/禅道地址】[：:][\s]*([\s\S]*?)(?=\nꔷ |$)/
+    }
+
+  // 时间格式转换
+  let timeMatch = text.match(patterns.updateTime)
+  if(isOut){
+    timeMatch = text.match(patterns.updateTimeOut)
+  }
+  let updateTime = ''
+  if (timeMatch) {
+    const [_, year, month, day, time] = timeMatch
+    updateTime = `${year}-${month}-${day} ${time}:00`
+    updateTime  = updateTime.replace(/：/g, ":")
+  }
+
+  if(updateTime == null || updateTime == ''){
+    let timePattern = /【上线时间（国内）】\s*[:：]\s*(\d{4}-\d{2}-\d{2})\s*(\d{1,2}[:：]\d{1,2}(?:[:：]\d{1,2})?)/i;
+    if(isOut){
+      timePattern = /【上线时间（当地）】\s*[:：]\s*(\d{4}-\d{2}-\d{2})\s*(\d{1,2}[:：]\d{1,2}(?:[:：]\d{1,2})?)/i;
+    }
+    const matchResult = text.match(timePattern);
+    if(matchResult != null){
+      const datePart = matchResult[1];
+      let timePart = matchResult[2].replace(/：/g, ':');
+      // 如果时间部分没有秒数，则补全秒数
+      if(timePart.split(':').length === 2) {
+        timePart += ':00';
+      }
+      updateTime = `${datePart} ${timePart}`;
+    }
+    
+  }
+
+  if(updateTime == null || updateTime == ''){
+    // 匹配日期和时间部分，兼容多个空格和中文冒号
+    let domesticTimePattern = /【上线时间（国内）】\s*[:：]\s*(\d{4}-\d{2}-\d{2})\s*(\d{1,2}[:：]\d{1,2}(?:[:：]\d{1,2})?)/i;
+    if(isOut){
+      domesticTimePattern = /【上线时间（当地）】\s*[:：]\s*(\d{4}-\d{2}-\d{2})\s*(\d{1,2}[:：]\d{1,2}(?:[:：]\d{1,2})?)/i;
+    }
+    
+    // 执行匹配
+    const matchResult = text.match(domesticTimePattern);
+
+    if (matchResult) {
+        // 提取日期部分并替换可能的中文冒号为英文冒号
+        const datePart = matchResult[1];
+        const timePart = matchResult[2].replace('：', ':');
+        
+        // 补全秒数部分
+        updateTime = `${datePart} ${timePart}:00`;
+    }
+    
+  }
+
+
+  return updateTime;
 
 }
 
