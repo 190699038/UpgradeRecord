@@ -75,6 +75,8 @@
               style="height: 35vh;width: 110%;"
               ref="myQuillEditor"
               @ready="handleEditorReady"
+              @textChange="handleTextChange"
+              @selectionChange="handleSelectionChange"
             />
           </div>
         </el-form-item>
@@ -131,8 +133,6 @@ import { saveAs } from 'file-saver';
 
 import api from '../utils/api'
 import { id } from 'element-plus/es/locales.mjs';
-
-const editorInstance = ref(null)
 
 const tableData = ref([])
 const conclusion = ref('<p><strong style="color: #ff0000;">目的：xxx</strong></p><p><br></p><p>发起人：xxx</p><p><br></p><p>参会人：xxx</p><p><br></p><p><strong>结论：</strong></p><p>1. </p><p>2. </p><p>3. </p><p>4. </p><p><br></p>')
@@ -261,6 +261,12 @@ const submitForm = async () => {
     }
     
     formData.value.participants = participants
+
+
+
+
+
+
     //截取结论
     const ctentzMatch = value.match(/<strong>结论:<\/strong>(.*)/s)
     let ctent = (ctentzMatch?.[1]?? '').trim();
@@ -377,6 +383,51 @@ const editorOptions = ref({
   }
 })
 
+const handleTextChange = (delta, oldDelta, source) => {
+  console.log('文本变化:', {
+    delta: delta,
+    oldDelta: oldDelta,
+    source: source,
+    currentContent: conclusion.value
+  });
+  
+  // 实时字符数统计
+  const textLength = myQuillEditor.value.getText().length;
+  console.log('当前字符数:', textLength);
+  
+  // 可以在这里添加其他实时处理逻辑
+  // 比如实时保存草稿、字符数限制、关键词检测等
+
+  //截取日期
+  let value = conclusion.value
+    let dateMatch = value.match(/日期：(.*?)<\/p>/)
+    let date = (dateMatch?.[1]?? '').trim();
+    if(!date){
+      dateMatch = value.match(/日期：(.*?)<\/p>/)
+      date = (dateMatch?.[1]?? '').trim();
+    }
+    //日期格式转换成2.25-11-25格式，获取的原始日期是20251125
+    formData.value.date = date;//date.slice(0,4) + '-' + date.slice(4,6) + '-' + date.slice(6,8)
+
+
+
+};
+
+const handleSelectionChange = (range, oldRange, source) => {
+  console.log('选择变化:', {
+    range: range,
+    oldRange: oldRange,
+    source: source
+  });
+  
+  // 可以在这里添加选择变化时的处理逻辑
+  // 比如显示工具栏、获取选中的文本等
+  if (range && range.length > 0) {
+    const selectedText = editorInstance.value.getText(range.index, range.length);
+    console.log('选中的文本:', selectedText);
+  }
+};
+
 const handleEditorReady = (quill) => {
   const Clipboard = Quill.import('modules/clipboard');
   class PlainClipboard extends Clipboard {
@@ -426,6 +477,9 @@ const handleEditorReady = (quill) => {
   });
   // 初始化空Delta对象
   quill.setContents(new Delta());
+
+
+
   }
 
 const insertImageToEditor = (url) => {

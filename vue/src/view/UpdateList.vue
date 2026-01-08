@@ -72,7 +72,7 @@
           <el-button type="primary" size="small" @click="openTextParser">解析文本内容</el-button>
         </div>
       </template>
-      <el-form :model="formData" :rules="formRules" ref="formRef" label-width="80px">
+      <el-form :model="formData" :rules="formRules" ref="formRef" label-width="100px">
         <el-form-item label="国家" prop="country" l>
           <el-select v-model="formData.country" multiple @change="handleCountryChange">
             <el-option v-for="country in countryOptions" :key="country.value" :label="country.label"
@@ -84,7 +84,7 @@
             <el-option v-for="type in typeOptions" :key="type.value" :label="type.label" :value="type.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="平台" prop="platform" v-show="false">
+        <el-form-item label="平台" prop="platform">
           <el-select v-model="formData.platform">
             <el-option v-for="platform in platformOptions" :key="platform.value" :label="platform.label"
               :value="platform.value" />
@@ -244,11 +244,16 @@ const formRules = ref({
   }]
 })
 const countryOptions = ref([
-  { value: 'ALL', label: '所有' },  
+  { value: 'ALL', label: '所有' }, 
+  { value: 'AI_GLJ_and', label: '古兰经_安卓' },
+  { value: 'AI_GLJ_ios', label: '古兰经_IOS' },
+  
   { value: 'US', label: '美国1' },
   { value: 'US2', label: '美国2' },
   { value: 'US3', label: '美国3' },
-
+  { value: 'US4', label: '美国4' },
+  { value: 'OZ', label: '欧洲' },
+  { value: 'ZD', label: '中东' },
   { value: 'BR', label: '巴西1' },
   { value: 'BR2', label: '巴西2' },
   { value: 'MX', label: '墨西哥' },
@@ -285,6 +290,8 @@ const typeOptions = ref([
   { value: '功能优化', label: '功能优化' }
 ])
 const platformOptions = ref([
+  { value: 'Android', label: 'Android' },
+  { value: 'IOS', label: 'IOS' },
   { value: '前端', label: '前端' },
   { value: '后端', label: '后端' },
   { value: '前后端', label: '前后端' },
