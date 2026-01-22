@@ -32,7 +32,18 @@
         :formatter="formatCountry" />
       <el-table-column prop="content" label="升级内容" header-align="center">
         <template #default="scope">
-          <div style="white-space: pre-line">{{ scope.row.content }}</div>
+          <div style="white-space: pre-line">
+            <template v-for="(item, index) in formatContentWithLinks(scope.row.content)" :key="index">
+              <a v-if="item.type === 'link'" 
+                 :href="item.url" 
+                 target="_blank" 
+                 style="color: #409eff; text-decoration: none; cursor: pointer;"
+                 @click.stop>
+                {{ item.text }}
+              </a>
+              <span v-else>{{ item.value }}</span>
+            </template>
+          </div>
         </template>
       </el-table-column>
 
@@ -193,6 +204,55 @@ const dialogVisible = ref(false)
 const dialogType = ref('create')
 
 const reviewInfo = ref({ 'review_content': '', 'conclusion': '' })
+
+const formatContentWithLinks = (content) => {
+  if (!content) return []
+  
+  // 匹配 URL 后跟空格（可选）和括号（中文或英文）及其内容
+  // 修正正则：排除 URL 中的左括号，防止贪婪匹配吞掉分隔符
+  const regex = /(https?:\/\/[^\s（\(]+)\s*([（\(].*?[）\)])/g
+  
+  const result = []
+  let lastIndex = 0
+  let match
+  
+  while ((match = regex.exec(content)) !== null) {
+    // 匹配前的文本
+    if (match.index > lastIndex) {
+      result.push({
+        type: 'text',
+        value: content.slice(lastIndex, match.index)
+      })
+    }
+    
+    // 链接部分
+    result.push({
+      type: 'link',
+      url: match[1],
+      text: match[2]
+    })
+    
+    lastIndex = regex.lastIndex
+  }
+  
+  // 剩余文本
+  if (lastIndex < content.length) {
+    result.push({
+      type: 'text',
+      value: content.slice(lastIndex)
+    })
+  }
+  
+  if (result.length === 0) {
+    result.push({
+      type: 'text',
+      value: content
+    })
+  }
+  
+  return result
+}
+
 const dialogTitle = computed(() => {
   return dialogType.value === 'create' ? '新增记录' : '编辑记录'
 })
