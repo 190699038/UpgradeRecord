@@ -305,9 +305,6 @@ const formRules = ref({
 })
 const countryOptions = ref([
   { value: 'ALL', label: '所有' }, 
-  { value: 'AI_GLJ_and', label: '古兰经_安卓' },
-  { value: 'AI_GLJ_ios', label: '古兰经_IOS' },
-  
   { value: 'US', label: '美国1' },
   { value: 'US2', label: '美国2' },
   { value: 'US3', label: '美国3' },
@@ -321,12 +318,13 @@ const countryOptions = ref([
   { value: 'CL', label: '智利' },
   { value: 'AU', label: '澳大利亚' },
   { value: 'CA', label: '加拿大' },
-
-  { value: 'PH', label: '菲律宾' },
+  { value: 'AI_GLJ_and', label: '古兰经_安卓' },
+  { value: 'AI_GLJ_ios', label: '古兰经_IOS' },
   { value: 'OA', label: 'OA' },
   { value: 'pay_br_all', label: '巴西1、2' },
   { value: 'pay_in_phi', label: '印度、菲律宾' },
   { value: 'pay_other_all', label: '美国1、美国2、美国3、墨西哥、智利、加拿大、秘鲁' },
+  { value: 'PH', label: '菲律宾' },
 
 
 
@@ -551,7 +549,7 @@ const sendMessageToGroup = async (row) => {
 const openDialog = (type, row) => {
   dialogType.value = type;
   dialogType.value === 'create' ? '新增记录' : '编辑记录'
-
+  console.log(row)
   if (type === 'edit') {
     formData.value = {
       ...row,
