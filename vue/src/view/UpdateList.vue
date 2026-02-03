@@ -553,6 +553,7 @@ const openDialog = (type, row) => {
   if (type === 'edit') {
     formData.value = {
       ...row,
+      country: row.country ? (row.country.includes(',') ? row.country.split(',') : [row.country]) : [],
       tester: row.tester ? row.tester.split('、') : [],
       updater: row.updater ? row.updater.split('、') : []
     }

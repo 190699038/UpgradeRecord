@@ -16,12 +16,13 @@ export default createRouter({
       component: MainLayout,
       children: [
         { path: 'upgrade-record', component: UpgradeRecord },
-        { path: 'product-record', component: ProductRecord },
-        { path: 'follow-up-task', component: FollowUpTask },
         { path: 'review-record', component: ReviewRecord },
+        { path: 'follow-up-task', component: FollowUpTask },
         { path: 'user-management', component: UserManagement },
-        { path: 'daily-reminders', component: DailyReminder },
-        { path: 'key-tasks', component: KeyTask },
+
+        // { path: 'product-record', component: ProductRecord },
+        // { path: 'daily-reminders', component: DailyReminder },
+        // { path: 'key-tasks', component: KeyTask },
         { path: '', redirect: 'upgrade-record' }
       ]
     }
